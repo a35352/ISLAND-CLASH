@@ -285,6 +285,7 @@ button:disabled{cursor:not-allowed;opacity:.52;filter:grayscale(.4)}
 <div id="updateNotice" role="dialog" aria-label="Island Clash update notes"><div class="overlayPanel updatePanel"><div class="updateMark">✨ NEW UPDATE</div><h2>ISLAND CLASH <span>v26</span></h2><p>Big Maps, Boss Radar & 25K Vault</p><ul><li>🗺 Maps expanded by 26% in width, with up to 165 bots on late islands.</li><li>👑 The world boss appears on the minimap and spawns automatically every second completed round on islands 5–10.</li><li>🔐 The base Legendary Vault reward is now 25,000 gold.</li><li>🎉 Live island events: Gold Rush, Treasure Rain, Swift Winds, and Storm Truce.</li><li>👑 Six unique bosses on islands 5–10; health, speed, attacks, and rewards scale up.</li><li>🤖 Bots patrol when alone, attack visible bosses, and can be hit by boss shockwaves.</li><li>💰 Bosses drop large, clearly visible Royal Coins and a Royal Chest; coins are briefly protected from bot magnet pickup.</li><li>🎁 Defeat a boss for bonus growth, piles of coins, and a Royal Chest with a 2% vault-code chance.</li><li>🛡 Admins can launch any event or summon a boss for testing.</li><li>⚔️ Point-blank sword hits now connect when pirates touch.</li><li>🗺 Admins can load any island for practice without changing saved progression.</li><li>🧭 Smoother directional turning and modest steering while dashing.</li><li>🏆 Complete new achievement challenges and equip earned pirate tags.</li><li>✨ Purchase trails and spend chest tokens in the Token Market.</li><li>⚔️ Permanent skin and pet upgrades: small bonuses, three levels and escalating gold prices.</li><li>🐾 Bots use varied island-appropriate skins and companions.</li><li>💥 Stronger sword knockback after successful hits.</li><li>🔐 Owner-configurable vault with one globally available key per reset (local saves only).</li><li>✨ Weekly-only skins, rare player-specific chest codes and new achievement tags.</li><li>🛡 Sword-on-sword clashes deflect damage; only body hits hurt.</li><li>🤖 Bots survive longer, with tougher AI on advanced islands.</li><li>🗺 Enemy dots removed from minimap, and admins can view the vault code.</li><li>🔐 Rare vault codes are random, visible only to their finder, and the vault refreshes after a successful big-prize claim.</li><li>🎟 Personal chest reward codes stay valid independently and never reset the legendary vault.</li><li>🧪 Admins can test-claim the live vault, gift its prize, or assign the current code to a saved player profile.</li><li>❤️ Better starting health, less bot damage, and slower storm damage for players.</li><li>🎲 Random safe spawn positions each round, with bots kept away from the spawn.</li><li>🛡 Admin: spawn 10 chests or 10 bots while a match is running.</li><li>🧊 Admins can freeze or unfreeze storm advancement during matches.</li><li>⏸ Temporary Shutdown pauses non-admin games on this browser, while verified admins keep playing.</li></ul><button id="updateDismiss" type="button" class="communityPrimary">AWESOME — LET’S PLAY!</button><div class="tinyWarning">Offline version: posts and reports remain on this browser.</div></div></div>
 <button id="leaderboardQuick" type="button" aria-label="Open leaderboard">🏆 RANKS</button><button id="ownerAdminButton" type="button" aria-label="Owner admin panel">🛡 ADMIN</button><div id="toast" role="status"></div><div id="gameHint">WASD — MOVE • SPACE TAP — SWING • HOLD / RELEASE — DASH • 📦 CHESTS: BASIC TOKENS + 10% BOOST • ESC — PAUSE</div>
 <div id="touchUI"><div id="joyBase"><div id="joyStick"></div></div><button id="slashTouch" class="touchAction">⚔<br>TAP / HOLD</button><button id="pauseTouch">Ⅱ</button></div>
+<script src="/admin-online.js"></script>
 <script>
 (()=>{'use strict';
 const canvas=document.getElementById('game'),cx=canvas.getContext('2d',{alpha:false}),TAU=Math.PI*2;
@@ -439,7 +440,9 @@ function earnedTags(){return ACHIEVEMENTS.filter(a=>achievementProgress(a)>=a.re
 function checkAchievements(){profile.achievementTags=[...new Set([...(profile.achievementTags||[]),...earnedTags()])]}
 function tagText(name){if(invKey(name)===invKey(profile.name)&&profile.equippedTag&&profile.achievementTags?.includes(profile.equippedTag))return ACHIEVEMENTS.find(a=>a.id===profile.equippedTag)?.tag||'';return ''}
 const OWNER_DISPLAY_NAME='BRITBOX';
-const SAVE_KEYS=['islandClashSaveV12','islandClashSaveV4'];
+const onlineMode=typeof window.createIslandOnline==='function';
+let onlineUser=null;
+const SAVE_KEYS=onlineMode?['islandClashOnlineSoloV1']:['islandClashSaveV12','islandClashSaveV4'];
 const ADMIN_TRUST_KEY='islandClashOwnerTrustedV1';
 function petBonuses(){const p=PETS.find(p=>p.id===profile.pet);const base=p?.bonuses||{};return {...base,power:(base.power||1)*(1+.03*upPet(profile.pet,'power')),speed:(base.speed||1)*(1+.025*upPet(profile.pet,'speed')),magnet:(base.magnet||0)+16*upPet(profile.pet,'magnet'),health:(base.health||1)*(1+.035*upPet(profile.pet,'health'))}}
 // Each tier awards either gold, a skin, or a working companion pet.
@@ -476,7 +479,7 @@ try{
  const oldSaves=SAVE_KEYS.map(key=>{try{return JSON.parse(localStorage.getItem(key)||'null')}catch{return null}}).filter(v=>v&&typeof v==='object'&&v.name);
  profile=oldSaves.sort((a,b)=>(Number(b.savedAt)||0)-(Number(a.savedAt)||0))[0]||null;
 }catch{}
-if(!profile){let old={};try{old=JSON.parse(localStorage.getItem('islandClashSaveV3')||'{}')}catch{};
+if(!profile){let old={};try{old=JSON.parse((!onlineMode&&localStorage.getItem('islandClashSaveV3'))||'{}')}catch{};
  profile={name:old.name||'Captain You',bank:old.bank||0,wins:old.wins||0,unlocked:old.unlocked||0,codes:old.codes||[],last:{kills:0,loot:0,seconds:0},best:{kills:0,loot:0,seconds:0},total:{kills:0,loot:0,seconds:0,rounds:0}}}
 profile.last||={kills:0,loot:0,seconds:0};profile.best||={kills:0,loot:0,seconds:0};profile.total||={kills:0,loot:0,seconds:0,rounds:0};profile.codes||=[];
 profile.playtimeSec=Math.max(0,Number(profile.playtimeSec??profile.total.seconds)||0);
@@ -490,7 +493,7 @@ profile.giftCodes=Array.isArray(profile.giftCodes)?profile.giftCodes:[];
 profile.admin||={ownerHash:'',ownerName:'',delegates:[]};profile.admin.delegates||=[];
 profile.vaultState ||= {cycle:0,prize:{kind:'gold',amount:25000},active:false,keyOwner:'',codeOwner:'',claimedBy:''};
 profile.basicTokens=Math.max(0,Math.floor(Number(profile.basicTokens)||0));profile.battleXP=Math.max(0,Number(profile.battleXP)||0);profile.proPass=!!profile.proPass;profile.passClaimedFree=Array.isArray(profile.passClaimedFree)?profile.passClaimedFree:[];profile.passClaimedPro=Array.isArray(profile.passClaimedPro)?profile.passClaimedPro:[];
-function invKey(name){return String(name||'Captain You').trim().toLowerCase().replace(/[<>]/g,'').slice(0,16)||'captain you'}
+function invKey(name){if(onlineUser&&name===onlineUser.username)return 'online:'+onlineUser.id;return String(name||'Captain You').trim().toLowerCase().replace(/[<>]/g,'').slice(0,16)||'captain you'}
 function newInventory(){return {bank:0,ownedSkins:['classic'],ownedPets:['none'],skin:'classic',pet:'none',ownedTrails:['none'],trail:'none',skinUpgrades:{},petUpgrades:{}}}
 function captureInventory(){return {bank:Math.max(0,Number(profile.bank)||0),ownedSkins:[...new Set(profile.ownedSkins||['classic'])],ownedPets:[...new Set(profile.ownedPets||['none'])],skin:profile.skin||'classic',pet:profile.pet||'none',ownedTrails:[...new Set(profile.ownedTrails||['none'])],trail:profile.trail||'none',skinUpgrades:structuredClone(profile.skinUpgrades||{}),petUpgrades:structuredClone(profile.petUpgrades||{})}}
 profile.chestsOpened=Math.max(0,Number(profile.chestsOpened)||0);profile.personalChestCodes=profile.personalChestCodes||[];profile.vaultOwnedKeyCycle=profile.vaultOwnedKeyCycle||0;profile.vaultOwnedCodeCycle=profile.vaultOwnedCodeCycle||0;
@@ -514,7 +517,7 @@ function applyAccount(name){const d=profile.accountsByName[invKey(name)]||newAcc
  profile.lastSeenUpdate=String(d.lastSeenUpdate||'');
  profile.playtimeSec=Math.max(0,Number(d.playtimeSec??d.total?.seconds)||0);
  profile.battleXP=Math.max(0,Number(d.battleXP)||0);profile.proPass=!!d.proPass;profile.passClaimedFree=[...(d.passClaimedFree||[])];profile.passClaimedPro=[...(d.passClaimedPro||[])];
- profile.wins=Number(d.wins)||0;profile.currentIsland=clamp(Number(d.currentIsland)||0,0,ISLANDS.length-1);profile.unlocked=profile.currentIsland;
+ profile.wins=Number(d.wins)||0;profile.currentIsland=clamp(Number(d.currentIsland)||0,0,ISLANDS.length-1);profile.unlocked=Math.max(profile.currentIsland,Number(d.unlocked)||0);
  profile.codes=[...(d.codes||[])];profile.last={...newAccount().last,...d.last};profile.best={...newAccount().best,...d.best};profile.total={...newAccount().total,...d.total};
  profile.islandWins=Array.from({length:ISLANDS.length},(_,i)=>Number(d.islandWins?.[i])||0);profile.islandKos=Array.from({length:ISLANDS.length},(_,i)=>Number(d.islandKos?.[i])||0);
 }
@@ -645,7 +648,7 @@ function updateLoginUI(){
 function skinStats(){return skinUpgradeStats(SKINS.find(s=>s.id===profile.skin)||SKINS[0])}
 
 
-const save=()=>{writeActiveInventory();writeActiveAccount();profile.savedAt=Date.now();profile.saveSchema=12;
+const save=()=>{if(onlineMode&&!onlineUser)return;writeActiveInventory();writeActiveAccount();profile.savedAt=Date.now();profile.saveSchema=12;
  try{const data=JSON.stringify(profile);for(const key of SAVE_KEYS)localStorage.setItem(key,data);const el=$('saveStatus');if(el)el.textContent='✓ SAVED '+new Date(profile.savedAt).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
  }catch{const el=$('saveStatus');if(el)el.textContent='⚠ SAVE FAILED';}
 };
@@ -876,7 +879,7 @@ function openChest(c,f){
   const vault=profile.vaultState;
   // Exactly one legendary item (key OR secret code) can drop in any cycle.
   // This account-local rarity rule requires a shared server to work across devices.
-  if(vault.active&&!vault.claimedBy&&!vault.keyOwner&&!vault.codeOwner&&Math.random()<(c.bossChest?.02:.005)){
+  if(!onlineMode&&vault.active&&!vault.claimedBy&&!vault.keyOwner&&!vault.codeOwner&&Math.random()<(c.bossChest?.02:.005)){
    const kind=Math.random()<.5?'key':'code';
    if(kind==='key'){vault.keyOwner=invKey(profile.name);profile.vaultOwnedKeyCycle=vault.cycle;showToast('🗝 LEGENDARY VAULT KEY FOUND! Open the Vault to claim.')}
    else{vault.codeOwner=invKey(profile.name);profile.vaultOwnedCodeCycle=vault.cycle;showToast('🔐 LEGENDARY VAULT CODE FOUND! Open the Vault to see it.')}
@@ -2276,26 +2279,353 @@ $('vaultAdminGift').onclick=()=>{
 };
 const originalRenderAdmin=renderAdmin;renderAdmin=function(){originalRenderAdmin();if(adminAuthenticated){$('adminVaultConfig').style.display=adminRole==='owner'?'block':'none';vaultAdminView()}};
 
-// Server admin bridge: the real match stays entirely local; no online players.
-window.addEventListener('island-admin-reward',event=>{
-  const detail=event.detail||{};
-  if(!loggedInForInput())return showToast('Log into your pirate account before redeeming.');
-  const amount=Math.floor(Number(detail.amount)||0);
-  if(amount<1||amount>1000000||!['gold','tokens'].includes(detail.kind))return;
-  const code=String(detail.code||'').toUpperCase();
-  if(profile.codes.includes('GLOBAL_'+code))return;
-  profile.codes.push('GLOBAL_'+code);
-  if(detail.kind==='tokens')profile.basicTokens=(profile.basicTokens||0)+amount;
-  else profile.bank=(profile.bank||0)+amount;
-  save();refreshMenu();showToast('🌐 Global code: +'+amount+' '+detail.kind+'!');
-});
-window.addEventListener('island-admin-notice',event=>{
-  const message=String(event.detail?.text||'').slice(0,180);
-  if(message)showToast('📣 BRITBOX: '+message);
-});
-refreshMenu();$('authName').value=profile.name;setAuthMode('login');showAccountDock(true);generateTerrain();camera.x=0;camera.y=0;camera.zoom=.9;requestAnimationFrame(loop);
+function enableOnlineMode() {
+ const online=window.createIslandOnline();
+ const request=online.request;
+ const isAdmin=()=>['admin','owner'].includes(onlineUser?.role);
+ const assetGroups=[
+  ['skin',SKINS,'ownedSkins','classic'],['pet',PETS,'ownedPets','none'],['trail',TRAILS,'ownedTrails','none']
+ ];
+ const assets=[
+  {asset:'gold',item:'',label:'Gold'}, {asset:'tokens',item:'',label:'Basic Tokens'},
+  {asset:'pass_xp',item:'',label:'Battle Pass XP'}, {asset:'pass_levels',item:'',label:'Battle Pass levels'},
+  ...ISLANDS.map((island,index)=>({asset:'island',item:String(index),label:'Unlock '+island.name})),
+  ...assetGroups.flatMap(([asset,items])=>items.filter(item=>!item.adminOnly).map(item=>({asset,item:item.id,label:item.name})))
+ ];
+ const admin=window.mountIslandAdmin($('admin'),request,assets,MATCH_EVENTS);
+ let globalState={},seenNotice,seenEvent,lastEventRound,refreshing=false;
+ let identityChange=false,accountRefresh=Promise.resolve();
+ let cloudRevision=0,cloudConflict=false,lastCloudData='',cloudUpload=null;
+ const messages={
+  bulletin:'Announcements from the Island Clash team.',
+  bug:'Describe the issue and what you were doing before it happened.',
+  contact:'Send a message to the Island Clash team.'
+ };
+ for(const [kind,copy] of Object.entries(messages))$(kind+'Section').querySelector('.sectionExplainer').textContent=copy;
+ $('authSignupNote').textContent='Your account syncs solo progress and rewards while you’re signed in.';
+ $('authCode').placeholder='At least 10 characters';
+ $('authBackup').hidden=true;
+ $('authRestore').hidden=true;
+ $('backupBtn').hidden=true;
+ $('restoreFile').disabled=true;
+ for(const element of document.querySelectorAll('.legacyAccountControls'))element.style.display='none';
+ $('menu').querySelector('#menuShell > .smallNote')?.remove();
+ $('vaultPanel').querySelector('.smallNote').textContent='Enter a shared vault code or a personal code found during solo play.';
+ $('vaultOpenKey').style.display='none';
+ worldSwitches={stormFrozen:false,shutdown:false};
+
+ const localAuthMode=setAuthMode;
+ setAuthMode=mode=>{
+  localAuthMode(mode);
+  $('authStatus').textContent=mode==='signup'?'Choose a username and a passcode of at least 10 characters.':'Enter your online username and passcode.';
+ };
+ verifiedWorldAdmin=isAdmin;
+ isOwnerTaggedName=name=>!!onlineUser&&name===onlineUser.username&&onlineUser.role==='owner';
+ const localLoginUI=updateLoginUI;
+ updateLoginUI=()=>{
+  localLoginUI();
+  $('accountStatus').textContent=onlineUser?'Signed in as '+onlineUser.username:'Log in to your online account to play.';
+  if(onlineUser&&cloudConflict)$('accountStatus').textContent+=' · Another session saved first. Sign in again to load that save.';
+  $('playBtn').disabled=!onlineUser||shutdownBlocksPlayer();
+ };
+ updateOwnerButton=()=>{
+  const visible=isAdmin()&&(state==='menu'||state==='playing')&&$('admin').style.display!=='flex'&&
+   $('shop').style.display!=='flex'&&$('battlePass').style.display!=='flex';
+  $('ownerAdminButton').style.display=visible?'flex':'none';
+  $('leaderboardQuick').style.display=state==='playing'?'flex':'none';
+ };
+ openAdmin=()=>{
+  if(!isAdmin()||(state!=='menu'&&state!=='playing'))return;
+  closeLeaderboard();
+  $('admin').style.display='flex';
+  updateOwnerButton();
+  void admin.refresh(onlineUser.role);
+ };
+ $('ownerAdminButton').onclick=openAdmin;
+ admin.close.onclick=closeAdmin;
+ $('profileLoad').onclick=()=>showAccountDock(true);
+
+ function syncInventory(rows) {
+  profile.onlineInventory ||= {};
+  const previous=profile.onlineInventory[onlineUser.id]||{};
+  const current=Object.fromEntries(rows.map(row=>[row.asset+':'+row.item,Number(row.qty)]));
+  const difference=asset=>(current[asset+':']||0)-(previous[asset+':']||0);
+  profile.bank=Math.max(0,profile.bank+difference('gold'));
+  profile.basicTokens=Math.max(0,profile.basicTokens+difference('tokens'));
+  profile.battleXP=Math.max(0,profile.battleXP+difference('pass_xp')+difference('pass_levels')*PASS_XP_PER_TIER);
+  for(const [asset,items,field,fallback] of assetGroups){
+   for(const item of items){
+    const key=asset+':'+item.id;
+    if(item.adminOnly||item.id===fallback)continue;
+    if(current[key]>0&&!previous[key]&&!profile[field].includes(item.id))profile[field].push(item.id);
+    if(!current[key]&&previous[key]){
+     profile[field]=profile[field].filter(id=>id!==item.id);
+     if(profile[asset]===item.id)profile[asset]=fallback;
+    }
+   }
+  }
+  for(let index=0;index<ISLANDS.length;index++){
+   if(current['island:'+index]>0)profile.unlocked=Math.max(profile.unlocked,index);
+  }
+  profile.currentIsland=Math.max(profile.currentIsland,profile.unlocked);
+  profile.onlineInventory[onlineUser.id]=current;
+  save();
+ }
+
+ function syncAccount(){
+  const pending=accountRefresh.catch(()=>{}).then(refreshAccount);
+  accountRefresh=pending;
+  return pending;
+ }
+ async function refreshAccount(){
+  const id=onlineUser?.id;
+  if(!id)return;
+  const {user,inventory}=await request('me');
+  if(onlineUser?.id!==id)return;
+  onlineUser=user;
+  if(!isAdmin()&&$('admin').style.display==='flex')closeAdmin();
+  syncInventory(inventory);
+  if(state==='menu'){islandId=profile.currentIsland;refreshMenu()}
+  updateOwnerButton();
+ }
+
+ async function loadCloudSave(){
+  const {save:cloud}=await request('solo-save');
+  cloudRevision=cloud?.revision||0;
+  cloudConflict=false;
+  lastCloudData=cloud?JSON.stringify(cloud.data):'';
+  profile.onlineInventory ||= {};
+  profile.onlineSaveRevisions ||= {};
+  const localRevision=profile.onlineSaveRevisions[onlineUser.id];
+  if(cloud&&localRevision!==cloud.revision){
+   const key=invKey(onlineUser.username);
+   profile.accountsByName[key]=cloud.data.account;
+   profile.inventoryByName[key]=cloud.data.inventory;
+   profile.onlineInventory[onlineUser.id]=cloud.data.grants;
+   applyAccount(onlineUser.username);
+   applyInventory(onlineUser.username);
+  }
+  profile.onlineSaveRevisions[onlineUser.id]=cloudRevision;
+ }
+ function uploadCloudSave(){
+  if(cloudUpload)return cloudUpload;
+  if(!onlineUser||cloudConflict)return Promise.resolve();
+  const userId=onlineUser.id;
+  const data={account:captureAccount(),inventory:captureInventory(),grants:profile.onlineInventory?.[userId]||{}};
+  const serialized=JSON.stringify(data);
+  if(serialized===lastCloudData)return Promise.resolve();
+  cloudUpload=request('solo-save',{revision:cloudRevision,data}).then(result=>{
+   cloudRevision=result.revision;
+   lastCloudData=serialized;
+   profile.onlineSaveRevisions[userId]=cloudRevision;
+   save();
+  }).catch(error=>{
+   if(error.status===409){cloudConflict=true;updateLoginUI()}
+   showToast(error.message);
+  }).finally(()=>{cloudUpload=null});
+  return cloudUpload;
+ }
+
+ function signOutLocally(){
+  if(onlineUser)save();
+  onlineUser=null;
+  signedInKey='';
+  profile.name='Captain You';
+  applyAccount(profile.name);
+  applyInventory(profile.name);
+  $('admin').style.display='none';
+  for(const id of ['community','vaultPanel','shop','battlePass'])$(id).style.display='none';
+  $('authCode').value='';
+  $('authConfirm').value='';
+  refreshMenu();
+  setAuthMode('login');
+  showAccountDock(true);
+ }
+
+ $('authSubmit').onclick=async()=>{
+  if(identityChange||onlineUser)return;
+  const username=$('authName').value.trim(),password=$('authCode').value;
+  if(authMode==='signup'&&password!==$('authConfirm').value){
+   $('authStatus').textContent='Passcodes do not match.';
+   return;
+  }
+  identityChange=true;
+  $('authSubmit').disabled=true;
+  try{
+   const user=await online.signIn(authMode,{username,password});
+   onlineUser=user;
+   profile.name=user.username;
+   signedInKey=invKey(user.username);
+   presenceClock=performance.now();
+   applyAccount(user.username);
+   applyInventory(user.username);
+   $('nameInput').value=user.username;
+   await loadCloudSave();
+   await syncAccount();
+   generateTerrain();
+   camera.zoom=.9;
+   $('authCode').value='';
+   $('authConfirm').value='';
+   showAccountDock(false);
+   showToast('Signed in as '+user.username);
+   maybeShowUpdateNotes();
+  }catch(error){
+   if(onlineUser){await online.signOut().catch(()=>{});signOutLocally()}
+   $('authStatus').textContent=error.message;
+  }finally{
+   identityChange=false;
+   $('authSubmit').disabled=!!onlineUser;
+  }
+ };
+ $('authLogout').onclick=$('logoutProfile').onclick=async()=>{
+  if(state!=='menu'||identityChange)return;
+  identityChange=true;
+  try{
+   await accountRefresh.catch(()=>{});
+   await uploadCloudSave();
+   await online.signOut();
+  }catch(error){showToast(error.message)}
+  finally{
+   signOutLocally();
+   $('authSubmit').disabled=false;
+   identityChange=false;
+  }
+ };
+
+ function action(button,work){
+  return async()=>{
+   if(button.disabled)return;
+   button.disabled=true;
+   try{await work()}catch(error){showToast(error.message)}
+   finally{button.disabled=false}
+  };
+ }
+ $('redeemBtn').onclick=action($('redeemBtn'),async()=>{
+  if(!accountActionAllowed())return;
+  await request('redeem',{code:$('codeInput').value});
+  $('codeInput').value='';
+  showToast('Online reward redeemed');
+  await syncAccount();
+ });
+ for(const [buttonId,field,kind,category] of [
+  ['sendBug','bugText','bug','bugCategory'],['sendContact','contactText','contact','contactTopic'],
+  ['sendApply','applyText','admin_application',null]
+ ]){
+  $(buttonId).onclick=action($(buttonId),async()=>{
+   if(!accountActionAllowed())return;
+   const fieldElement=$(field),message=fieldElement.value.trim();
+   if(message.length<5)throw new Error('Enter a message of at least five characters');
+   await request('reports',{kind,message:category?($(category).value+': '+message).slice(0,700):message});
+   fieldElement.value='';
+   $('communityStatus').textContent='Message sent.';
+  });
+ }
+
+ const invitation=document.createElement('form');
+ invitation.className='vaultFields';
+ invitation.innerHTML='<label for="adminInvitation">Admin invitation code</label><input id="adminInvitation" maxlength="24" required autocomplete="off"><button type="submit">Accept invitation</button>';
+ $('applySection').append(invitation);
+ invitation.onsubmit=event=>{
+  event.preventDefault();
+  if(!event.submitter)return;
+  void action(event.submitter,async()=>{
+   if(!accountActionAllowed())return;
+   await request('admin-invitations/accept',{code:$('adminInvitation').value});
+   invitation.reset();
+   await syncAccount();
+   $('communityStatus').textContent='Admin invitation accepted.';
+  })();
+ };
+
+ const renderLocalCommunity=renderCommunity;
+ let notices=[];
+ renderCommunity=()=>{
+  renderLocalCommunity();
+  const feed=$('bulletinFeed');
+  feed.replaceChildren();
+  for(const notice of notices){
+   const line=document.createElement('p');
+   line.textContent=notice.message+' · '+dateLabel(Date.parse(notice.created_at));
+   feed.append(line);
+  }
+  if(!notices.length)feed.textContent='No announcements yet.';
+ };
+ const redeemPersonal=$('vaultRedeem').onclick;
+ renderVault=()=>{
+  const prize=globalState.vault;
+  const name=prize&&assets.find(asset=>asset.asset===prize.asset&&asset.item===prize.item)?.label;
+  $('vaultStatus').textContent=prize?'Active prize: '+prize.qty+' '+(name||prize.asset)+' · ends '+dateLabel(Date.parse(prize.expires_at)):'No shared prize is currently active.';
+  $('vaultPersonalList').textContent=(profile.personalChestCodes||[]).map(code=>code.code+(code.used?' ✓':'')).join(' • ');
+ };
+ $('vaultRedeem').onclick=action($('vaultRedeem'),async()=>{
+  if(!accountActionAllowed())return;
+  const code=$('vaultCodeInput').value.trim().toUpperCase();
+  if((profile.personalChestCodes||[]).some(item=>item.code===code)){redeemPersonal();return}
+  await request('vault/claim',{code});
+  $('vaultCodeInput').value='';
+  showToast('Shared vault prize claimed');
+  await Promise.all([syncAccount(),refreshGlobal()]);
+ });
+ const startSoloRound=startRound;
+ startRound=()=>{
+  if(!onlineUser||shutdownBlocksPlayer())return showToast('Solo gameplay is temporarily paused.');
+  startSoloRound();
+  lastEventRound=null;
+  applyGlobalEvent();
+ };
+ function applyGlobalEvent(){
+  const event=globalState.event;
+  if(state==='playing'&&event?.active&&event.id!==lastEventRound){
+   lastEventRound=event.id;
+   seenEvent=event.id;
+   startEvent(event.event);
+  }
+ }
+ async function refreshGlobal(){
+  const result=await request('state');
+  globalState=result.state;
+  worldSwitches.shutdown=globalState.shutdown?.active===true;
+  $('shutdownScreen').querySelector('p').textContent=globalState.shutdown?.message||'The game will resume when the admin ends the shutdown.';
+  refreshWorldStatus();
+  updateLoginUI();
+  applyGlobalEvent();
+  if(globalState.event?.active&&globalState.event.id!==seenEvent){
+   seenEvent=globalState.event.id;
+   showToast('Global event: '+MATCH_EVENTS[globalState.event.event]?.name);
+  }
+  if($('vaultPanel').style.display==='flex')renderVault();
+ }
+ async function poll(){
+  if(refreshing)return;
+  refreshing=true;
+  try{
+   await Promise.allSettled([
+    refreshGlobal(),
+    request('notices').then(result=>{
+     notices=result.notices;
+     const latest=notices[0];
+     if(latest&&seenNotice!==undefined&&latest.id!==seenNotice)showToast(latest.message);
+     seenNotice=latest?.id||null;
+     if($('community').style.display==='flex'&&communityTab==='bulletin')renderCommunity();
+    }),
+    (!identityChange&&onlineUser?syncAccount():Promise.resolve()).catch(error=>{
+     if(error.status===401&&state==='menu'){
+      signOutLocally();
+      $('authSubmit').disabled=false;
+     }
+    })
+   ]);
+  }finally{refreshing=false}
+ }
+ setAuthMode('login');
+ void poll();
+ setInterval(poll,10000);
+ setInterval(()=>{if(!identityChange)void uploadCloudSave()},45000);
+}
+
+if(onlineMode)enableOnlineMode();
+refreshMenu();$('authName').value=onlineMode?'':profile.name;setAuthMode('login');showAccountDock(true);generateTerrain();camera.x=0;camera.y=0;camera.zoom=.9;requestAnimationFrame(loop);
 })();
 </script>
-<script src="/admin-online.js"></script>
 </body>
 </html>
