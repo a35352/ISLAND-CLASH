@@ -6,18 +6,36 @@ const crypto = require('crypto');
 const path = require('path');
 const { Pool } = require('pg');
 const { promisify } = require('node:util');
+const { readFileSync } = require('node:fs');
+const tls = require('node:tls');
 const scrypt = promisify(crypto.scrypt);
 if (!process.env.DATABASE_URL) {
   console.error('DATABASE_URL is missing; add it in Render Environment.');
   process.exit(1);
 }
+let databaseUrl;
+try {
+  databaseUrl = new URL(process.env.DATABASE_URL);
+} catch {
+  console.error('DATABASE_URL must be a valid PostgreSQL connection URL.');
+  process.exit(1);
+}
+let ssl = process.env.NODE_ENV !== 'production' &&
+  process.env.DATABASE_SSL === 'disable' ? false : { rejectUnauthorized: true };
+const supabaseHost = /^(?:db\.[a-z0-9]+\.supabase\.co|aws-\d+-[a-z0-9-]+\.pooler\.supabase\.com)$/.test(databaseUrl.hostname);
+const explicitCertificate = ['sslrootcert', 'sslcert', 'sslkey'].some(key => databaseUrl.searchParams.has(key));
+const sslMode = databaseUrl.searchParams.get('sslmode');
+if (ssl && supabaseHost && !explicitCertificate &&
+    [null, 'require', 'verify-ca', 'verify-full'].includes(sslMode)) {
+  const ca = readFileSync(path.join(__dirname, 'certs', 'supabase-ca.crt'), 'utf8');
+  const roots = tls.getCACertificates?.() || tls.rootCertificates;
+  ssl = { rejectUnauthorized: true, ca: [...roots, ca] };
+  // pg replaces the explicit ssl object whenever sslmode is in the URL.
+  databaseUrl.searchParams.delete('sslmode');
+}
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl:
-    process.env.NODE_ENV !== 'production' &&
-    process.env.DATABASE_SSL === 'disable'
-      ? false
-      : { rejectUnauthorized: true },
+  connectionString: databaseUrl.toString(),
+  ssl,
   max: 5,
   connectionTimeoutMillis: 12000,
 });

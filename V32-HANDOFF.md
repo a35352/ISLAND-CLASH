@@ -31,3 +31,5 @@ Chromium exercised online login, literal rendering of bulletin text, owner inbox
 3. Review shared vault discovery and the cutover with the project owner. Switch the Render start command to `npm run start:v32` only after approval and preview verification.
 
 V31 local accounts and progress keep their own save storage. Players can export a v31 backup and select it when creating a v32 account. The import takes the active pirate from a v9 or v12 backup. It excludes credentials, admin-only assets, and shared rewards, and leaves existing v32 saves intact. The shared vault currently uses owner-distributed codes. Personal chest codes still work in solo play. Cross-device discovery of legendary keys or codes from chests and automatic shared vault rollover remain open.
+
+The server bundles the [Supabase Root 2021 CA](https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt) for Supabase PostgreSQL endpoints, with CA and hostname verification enabled. An explicit client or root certificate in the connection URL takes precedence.
