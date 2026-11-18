@@ -4,6 +4,8 @@ The v32 server adds online accounts and shared administration to the original so
 
 ## What the branch adds
 
+- Solo rounds start at 50 bots on Palm Cove and increase by five per island, up to 95 on Crown of Tides. The Teacup Admin shortcut opens the admin panel for signed-in owners and admins.
+
 - Case-insensitive online usernames, async scrypt password hashing, expiring and revocable sessions, and BRITBOX-only owner setup.
 - An online admin panel for bulletin notices, account search, owner-controlled role changes and account-bound invitations, gifts, inventory adjustments, Battle Pass XP and levels, and island unlocks.
 - Cross-device bug reports, contact messages, and admin applications with an admin inbox and resolution controls.

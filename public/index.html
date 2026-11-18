@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#8ecb23">
-<title>Island Clash v25 — World Bosses, Patrol AI & Royal Loot</title>
+<title>Island Clash v32</title>
 <style>
 :root{font-family:Trebuchet MS,Arial,sans-serif;color:#202523}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#87c829}
@@ -218,13 +218,13 @@ button:disabled{cursor:not-allowed;opacity:.52;filter:grayscale(.4)}
     </div>
   </div>
   <main id="menuShell">
-    <div class="logo">ISLAND CLASH</div><div class="sublogo">BRITBOX EDITION · V20 • TREASURE CHESTS</div>
+    <div class="logo">ISLAND CLASH</div><div class="sublogo">BRITBOX EDITION · V32</div>
     <div class="menuFlex">
       <section class="instructions">
-        <h3>HOW TO PLAY · 100 PIRATES</h3>
+        <h3>HOW TO PLAY</h3>
         <p>Grab doubloons to grow. Defeat rival pirates and claim their dropped treasure. Stay inside the safe area as the faster red poison gas closes in.</p>
         <h3>CONTROLS</h3>
-        <p><b>NEW:</b> Larger islands with more bots, a boss crown on the minimap, a 25,000-gold base vault, and bosses every other round on islands 5–10. Six different, tougher royal bosses appear on islands 5–10. They are optional and drop a Royal Chest with a 2% vault clue chance (normal chests: 0.5%). Live events can double coin pickups, shower treasure, speed up movement, or pause the storm. Admins can start events on demand.</p><p><b>WASD / arrow keys</b> move and turn<br><b>Tap SPACE</b> to swing; <b>hold SPACE</b> briefly to charge, release to dash. Charging does not slow movement. Swords switch sides every strike, and bots can charge too.</p>
+        <p>Solo rounds start with 50 bots on Palm Cove. Each island adds five more. Optional bosses appear every other round on islands 5–10 and drop Royal Chests.</p><p><b>WASD / arrow keys</b> move and turn<br><b>Tap SPACE</b> to swing; <b>hold SPACE</b> briefly to charge, release to dash. Charging does not slow movement. Swords switch sides every strike, and bots can charge too.</p>
         <p>Touchscreen: joystick + hold/release the attack button.<br><b>Cash in all your loot after every round.</b><br>📦 Open chests for basic tokens. Each chest has a 10% chance to grant a 10-second power-up.</p>
       </section>
       <section class="playArea">
@@ -282,8 +282,8 @@ button:disabled{cursor:not-allowed;opacity:.52;filter:grayscale(.4)}
 <section id="bugSection" class="communitySection" hidden><p class="sectionExplainer">Found something broken? Explain what happened and how to reproduce it. Your report goes to the local admin inbox.</p><label for="bugCategory">TYPE OF BUG</label><select id="bugCategory"><option value="Gameplay">Gameplay / combat</option><option value="Accounts">Account / saves</option><option value="Shop">Shop / pets / pass</option><option value="Other">Something else</option></select><label for="bugText">WHAT HAPPENED?</label><textarea id="bugText" maxlength="700" rows="5" placeholder="What were you doing? What went wrong?" required></textarea><button id="sendBug" type="button" class="communityPrimary">SEND BUG REPORT</button></section>
 <section id="contactSection" class="communitySection" hidden><p class="sectionExplainer">Send a message to the local admin inbox. Include your game name so admins know who wrote it.</p><label for="contactTopic">TOPIC</label><select id="contactTopic"><option>Question</option><option>Account help</option><option>Gameplay feedback</option><option>Other</option></select><label for="contactText">MESSAGE FOR ADMIN</label><textarea id="contactText" maxlength="700" rows="5" placeholder="What would you like to ask the admin?"></textarea><button id="sendContact" type="button" class="communityPrimary">SEND TO ADMIN</button></section><section id="applySection" class="communitySection" hidden><p class="sectionExplainer">Tell the admins why you’d make a good moderator. Applying does not automatically give admin access.</p><label for="applyText">WHY DO YOU WANT TO BE AN ADMIN?</label><textarea id="applyText" maxlength="700" rows="5" placeholder="How would you help keep the game fun?" required></textarea><button id="sendApply" type="button" class="communityPrimary">SEND APPLICATION</button></section><div id="communityStatus" role="status" class="communityStatus"></div>
 </div></div>
-<div id="updateNotice" role="dialog" aria-label="Island Clash update notes"><div class="overlayPanel updatePanel"><div class="updateMark">✨ NEW UPDATE</div><h2>ISLAND CLASH <span>v26</span></h2><p>Big Maps, Boss Radar & 25K Vault</p><ul><li>🗺 Maps expanded by 26% in width, with up to 165 bots on late islands.</li><li>👑 The world boss appears on the minimap and spawns automatically every second completed round on islands 5–10.</li><li>🔐 The base Legendary Vault reward is now 25,000 gold.</li><li>🎉 Live island events: Gold Rush, Treasure Rain, Swift Winds, and Storm Truce.</li><li>👑 Six unique bosses on islands 5–10; health, speed, attacks, and rewards scale up.</li><li>🤖 Bots patrol when alone, attack visible bosses, and can be hit by boss shockwaves.</li><li>💰 Bosses drop large, clearly visible Royal Coins and a Royal Chest; coins are briefly protected from bot magnet pickup.</li><li>🎁 Defeat a boss for bonus growth, piles of coins, and a Royal Chest with a 2% vault-code chance.</li><li>🛡 Admins can launch any event or summon a boss for testing.</li><li>⚔️ Point-blank sword hits now connect when pirates touch.</li><li>🗺 Admins can load any island for practice without changing saved progression.</li><li>🧭 Smoother directional turning and modest steering while dashing.</li><li>🏆 Complete new achievement challenges and equip earned pirate tags.</li><li>✨ Purchase trails and spend chest tokens in the Token Market.</li><li>⚔️ Permanent skin and pet upgrades: small bonuses, three levels and escalating gold prices.</li><li>🐾 Bots use varied island-appropriate skins and companions.</li><li>💥 Stronger sword knockback after successful hits.</li><li>🔐 Owner-configurable vault with one globally available key per reset (local saves only).</li><li>✨ Weekly-only skins, rare player-specific chest codes and new achievement tags.</li><li>🛡 Sword-on-sword clashes deflect damage; only body hits hurt.</li><li>🤖 Bots survive longer, with tougher AI on advanced islands.</li><li>🗺 Enemy dots removed from minimap, and admins can view the vault code.</li><li>🔐 Rare vault codes are random, visible only to their finder, and the vault refreshes after a successful big-prize claim.</li><li>🎟 Personal chest reward codes stay valid independently and never reset the legendary vault.</li><li>🧪 Admins can test-claim the live vault, gift its prize, or assign the current code to a saved player profile.</li><li>❤️ Better starting health, less bot damage, and slower storm damage for players.</li><li>🎲 Random safe spawn positions each round, with bots kept away from the spawn.</li><li>🛡 Admin: spawn 10 chests or 10 bots while a match is running.</li><li>🧊 Admins can freeze or unfreeze storm advancement during matches.</li><li>⏸ Temporary Shutdown pauses non-admin games on this browser, while verified admins keep playing.</li></ul><button id="updateDismiss" type="button" class="communityPrimary">AWESOME — LET’S PLAY!</button><div class="tinyWarning">Offline version: posts and reports remain on this browser.</div></div></div>
-<button id="leaderboardQuick" type="button" aria-label="Open leaderboard">🏆 RANKS</button><button id="ownerAdminButton" type="button" aria-label="Owner admin panel">🛡 ADMIN</button><div id="toast" role="status"></div><div id="gameHint">WASD — MOVE • SPACE TAP — SWING • HOLD / RELEASE — DASH • 📦 CHESTS: BASIC TOKENS + 10% BOOST • ESC — PAUSE</div>
+<div id="updateNotice" role="dialog" aria-label="Island Clash update notes"><div class="overlayPanel updatePanel"><div class="updateMark">✨ NEW UPDATE</div><h2>ISLAND CLASH <span>v32</span></h2><ul><li>Round size starts at 50 bots and increases by five per island, up to 95.</li><li>The ☕ Teacup Admin button opens the admin panel for eligible accounts.</li></ul><button id="updateDismiss" type="button" class="communityPrimary">AWESOME — LET’S PLAY!</button></div></div>
+<button id="leaderboardQuick" type="button" aria-label="Open leaderboard">🏆 RANKS</button><button id="ownerAdminButton" type="button" aria-label="Open Teacup Admin panel">☕ TEACUP ADMIN</button><div id="toast" role="status"></div><div id="gameHint">WASD — MOVE • SPACE TAP — SWING • HOLD / RELEASE — DASH • 📦 CHESTS: BASIC TOKENS + 10% BOOST • ESC — PAUSE</div>
 <div id="touchUI"><div id="joyBase"><div id="joyStick"></div></div><button id="slashTouch" class="touchAction">⚔<br>TAP / HOLD</button><button id="pauseTouch">Ⅱ</button></div>
 <script src="/admin-online.js"></script>
 <script>
@@ -302,16 +302,16 @@ const rnum=(a,b)=>a+Math.random()*(b-a);
 function hash(n){const x=Math.sin(n*127.1+78.233)*43758.5453;return x-Math.floor(x)}
 const MAP=1900; // v26: 26% wider world, 59% more land area
 const ISLANDS=[
- {name:'PALM COVE',ground:'#8cc72c',light:'#a3dc36',dark:'#69aa29',grid:'#568b24',seed:122,duration:230,bots:145,difficulty:.86,winsNeeded:2,kosNeeded:7},
- {name:'CORAL GROVE',ground:'#83c854',light:'#a7dc69',dark:'#569f4a',grid:'#43873d',seed:521,duration:248,bots:145,difficulty:1.04,winsNeeded:3,kosNeeded:15},
- {name:'ANCIENT ATOLL',ground:'#9ac335',light:'#bbd65c',dark:'#76a42f',grid:'#658b2b',seed:882,duration:266,bots:145,difficulty:1.20,winsNeeded:3,kosNeeded:23},
- {name:'EMBER REEF',ground:'#baac49',light:'#ddbd62',dark:'#907841',grid:'#8b7830',seed:1290,duration:284,bots:145,difficulty:1.39,winsNeeded:4,kosNeeded:38},
- {name:'STORM CITADEL',ground:'#80b8a0',light:'#add0b9',dark:'#427b78',grid:'#426d70',seed:2138,duration:300,bots:145,difficulty:1.62,winsNeeded:5,kosNeeded:55},
- {name:'CRYSTAL SHOALS',ground:'#7ebcc0',light:'#afe5e4',dark:'#457c91',grid:'#477f89',seed:3129,duration:316,bots:145,difficulty:1.86,winsNeeded:6,kosNeeded:75},
- {name:'MOONLIGHT BAY',ground:'#7776b7',light:'#ada6d8',dark:'#4e4d88',grid:'#514b8c',seed:4110,duration:328,bots:145,difficulty:2.12,winsNeeded:7,kosNeeded:100},
- {name:'SUNKEN EMPIRE',ground:'#a5af62',light:'#d1d98f',dark:'#6e8154',grid:'#6d8656',seed:5932,duration:340,bots:155,difficulty:2.42,winsNeeded:8,kosNeeded:140},
- {name:'PHANTOM DEPTHS',ground:'#777eac',light:'#abaede',dark:'#424b77',grid:'#404977',seed:7618,duration:352,bots:160,difficulty:2.75,winsNeeded:10,kosNeeded:180},
- {name:'CROWN OF TIDES',ground:'#d1b36e',light:'#ffe3a2',dark:'#a1804b',grid:'#947242',seed:8873,duration:365,bots:165,difficulty:3.10,winsNeeded:0,kosNeeded:0}
+ {name:'PALM COVE',ground:'#8cc72c',light:'#a3dc36',dark:'#69aa29',grid:'#568b24',seed:122,duration:230,bots:50,difficulty:.86,winsNeeded:2,kosNeeded:7},
+ {name:'CORAL GROVE',ground:'#83c854',light:'#a7dc69',dark:'#569f4a',grid:'#43873d',seed:521,duration:248,bots:55,difficulty:1.04,winsNeeded:3,kosNeeded:15},
+ {name:'ANCIENT ATOLL',ground:'#9ac335',light:'#bbd65c',dark:'#76a42f',grid:'#658b2b',seed:882,duration:266,bots:60,difficulty:1.20,winsNeeded:3,kosNeeded:23},
+ {name:'EMBER REEF',ground:'#baac49',light:'#ddbd62',dark:'#907841',grid:'#8b7830',seed:1290,duration:284,bots:65,difficulty:1.39,winsNeeded:4,kosNeeded:38},
+ {name:'STORM CITADEL',ground:'#80b8a0',light:'#add0b9',dark:'#427b78',grid:'#426d70',seed:2138,duration:300,bots:70,difficulty:1.62,winsNeeded:5,kosNeeded:55},
+ {name:'CRYSTAL SHOALS',ground:'#7ebcc0',light:'#afe5e4',dark:'#457c91',grid:'#477f89',seed:3129,duration:316,bots:75,difficulty:1.86,winsNeeded:6,kosNeeded:75},
+ {name:'MOONLIGHT BAY',ground:'#7776b7',light:'#ada6d8',dark:'#4e4d88',grid:'#514b8c',seed:4110,duration:328,bots:80,difficulty:2.12,winsNeeded:7,kosNeeded:100},
+ {name:'SUNKEN EMPIRE',ground:'#a5af62',light:'#d1d98f',dark:'#6e8154',grid:'#6d8656',seed:5932,duration:340,bots:85,difficulty:2.42,winsNeeded:8,kosNeeded:140},
+ {name:'PHANTOM DEPTHS',ground:'#777eac',light:'#abaede',dark:'#424b77',grid:'#404977',seed:7618,duration:352,bots:90,difficulty:2.75,winsNeeded:10,kosNeeded:180},
+ {name:'CROWN OF TIDES',ground:'#d1b36e',light:'#ffe3a2',dark:'#a1804b',grid:'#947242',seed:8873,duration:365,bots:95,difficulty:3.10,winsNeeded:0,kosNeeded:0}
 ];
 const SKINS=[
  {id:'classic',name:'Blue Captain',price:0,color:'#1ca8cd',emoji:'🧢',desc:'Classic island captain',power:1,speed:1,health:1,reach:1},
@@ -2072,7 +2072,7 @@ function loop(now){tickLoggedInPlaytime(now);const dt=Math.min(.033,Math.max(0,(
  render();requestAnimationFrame(loop)}
 
 // V14: Community forms and messages are stored with local browser saves only.
-const GAME_UPDATE='v26-expanded-lands-boss-radar-25k-vault';
+const GAME_UPDATE='v32-round-sizes-teacup-admin';
 function maybeShowUpdateNotes(force=false){
  if(!loggedInForInput())return;
  if(force||profile.lastSeenUpdate!==GAME_UPDATE){

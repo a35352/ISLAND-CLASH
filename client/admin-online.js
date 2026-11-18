@@ -51,7 +51,7 @@ window.mountIslandAdmin = function mountIslandAdmin(
 ) {
   const body = document.createElement('div');
   body.innerHTML = `
-    <div class="overlayHead"><h2>ONLINE ADMIN</h2><button id="onlineAdminClose" type="button">CLOSE</button></div>
+    <div class="overlayHead"><h2>☕ TEACUP ADMIN</h2><button id="onlineAdminClose" type="button">CLOSE</button></div>
     <p id="onlineAdminStatus" role="status"></p>
     <form data-action="notice"><h3>Bulletin</h3><label>Message <textarea name="message" required maxlength="400"></textarea></label><button>Publish</button></form>
     <div id="onlineNotices"></div>
