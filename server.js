@@ -3,6 +3,9 @@
 const express=require('express'),http=require('http'),{WebSocketServer,WebSocket}=require('ws'),crypto=require('crypto');
 const app=express();app.use(express.static('public'));app.get('/health',(req,res)=>res.json({ok:true,players:humans.size,bots:bots.length}));
 const server=http.createServer(app),wss=new WebSocketServer({server,path:'/ws'});
+const OWNER_NAME='BRITBOX';
+const ownerSecret=String(process.env.BRITBOX_OWNER_SECRET||'');
+function verifyOwner(candidate){if(!ownerSecret||ownerSecret.length<12)return false;const a=crypto.createHash('sha256').update(String(candidate||'')).digest();const b=crypto.createHash('sha256').update(ownerSecret).digest();return crypto.timingSafeEqual(a,b);}
 const MAX=100,MAP=1850,TICK=50,humans=new Map(),bots=[];let coins=[],storm={x:0,y:0,r:1700},round=1,elapsed=0,worldTime=Date.now(),events=[];
 const rand=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const names=['Coral','Captain','Dagger','Reef','Skull','Kraken','Sailor','Storm','Anchor','Pearl','Shark','Rogue','Cannon','Drift','Tide'];
@@ -31,7 +34,7 @@ function update(dt){elapsed+=dt;storm.r=Math.max(125,1700-elapsed*6.3);let all=[
 fill();makeCoins();
 wss.on('connection',(ws)=>{if(humans.size>=MAX){ws.close(1013,'Match full');return;}let id=crypto.randomUUID(),p=fighter(id,'Pirate_'+id.slice(0,4));humans.set(id,p);fill();ws.send(JSON.stringify({type:'welcome',id,round}));
  ws.on('message',raw=>{if(raw.length>2048)return;let m;try{m=JSON.parse(raw)}catch{return};if(!m||typeof m!=='object')return;
- if(m.type==='join'){p.name=String(m.name||p.name).replace(/[^\w -]/g,'').slice(0,16)||p.name;p.skin=String(m.skin||'classic').slice(0,24);p.pet=String(m.pet||'none').slice(0,24);}
+ if(m.type==='join'){let requested=String(m.name||p.name).replace(/[^\w -]/g,'').trim().slice(0,16)||p.name;if(requested.toLowerCase()==='britbox'){if(!verifyOwner(m.ownerSecret)){ws.send(JSON.stringify({type:'name_rejected',reason:'BRITBOX is reserved. Set BRITBOX_OWNER_SECRET in Render and enter the owner secret to use this name.'}));requested='Pirate_'+id.slice(0,4);}else requested=OWNER_NAME;}p.name=requested;p.skin=String(m.skin||'classic').slice(0,24);p.pet=String(m.pet||'none').slice(0,24);}
  if(m.type==='input'){let x=Number(m.x)||0,y=Number(m.y)||0,mag=Math.hypot(x,y);p.moveX=mag>1?x/mag:x;p.moveY=mag>1?y/mag:y;if(mag>.05)p.angle=Math.atan2(y,x);if(m.attack===true&&p.attack<=0)attack(p,false);if(m.charge===true&&!p.charging){p.charging=true;p.chargeStart=Date.now();}if(m.charge===false&&p.charging){let charged=Date.now()-p.chargeStart>=300;p.charging=false;attack(p,charged);}}
  });ws.on('close',()=>{humans.delete(id);fill()});ws.on('error',()=>{});
 });
