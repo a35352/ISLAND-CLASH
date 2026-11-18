@@ -1,59 +1,82 @@
 'use strict';
-// Island Clash v30 multiplayer server. Keep OWNER_SETUP_SECRET private in Render.
-const express=require('express'),http=require('http'),crypto=require('crypto'),fs=require('fs'),path=require('path');
-const {WebSocketServer,WebSocket}=require('ws');
-const app=express();app.use(express.static(path.join(__dirname,'public')));const server=http.createServer(app),wss=new WebSocketServer({server,path:'/ws'});
-const MAX=100,MAP=1900,STEP=.05,SKINS=['classic','scarlet','emerald','gold','shadow','frost','seafoam','obsidian','inferno','tidalking','jungle','islandhero','proazure','procrimson','proabyss','prodivine','crystal','moon','relic','specter','crown','barnacle','reefblade','royal','void','nova'],PETS=['none','crab','parrot','turtle','ghost','dragon','fox','phoenix','jelly','raven','shark','wisp','leviathan','lobster','owl','whale','starfish','seahorse','goldfinch','stardrake','manta','celestial'];
-const ISLANDS=[['PALM COVE',230],['CORAL GROVE',248],['ANCIENT ATOLL',266],['EMBER REEF',284],['STORM CITADEL',300],['CRYSTAL SHOALS',316],['MOONLIGHT BAY',328],['SUNKEN EMPIRE',340],['PHANTOM DEPTHS',352],['CROWN OF TIDES',365]];
-const DB=process.env.ACCOUNTS_FILE||path.join(__dirname,'accounts.json');let accounts={};try{accounts=JSON.parse(fs.readFileSync(DB,'utf8'))}catch{};
-function saveAccounts(){try{fs.writeFileSync(DB,JSON.stringify(accounts))}catch(e){console.error('Account save failed: configure persistent disk',e.message)}}
-const rand=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.min(b,Math.max(a,v)),id=()=>crypto.randomUUID();
-function hashPassword(password,salt){return crypto.scryptSync(password,salt,64).toString('hex')}
-function equalHex(a,b){try{const aa=Buffer.from(a,'hex'),bb=Buffer.from(b,'hex');return aa.length===bb.length&&crypto.timingSafeEqual(aa,bb)}catch{return false}}
-function safeName(s){s=String(s||'').trim();return /^[a-zA-Z0-9_]{3,16}$/.test(s)?s:null}
-function token(){return crypto.randomBytes(24).toString('hex')}
-const sessions=new Map(),humans=new Map(),bots=new Map();let round=1,island=0,elapsed=0,coins=[],chests=[],boss=null,event=null,storm={x:0,y:0,r:1850,phase:'prepare',seconds:12};let nextCoinId=1;
-function spawnPos(){const a=rand(0,Math.PI*2),r=Math.sqrt(Math.random())*1350;return{x:Math.cos(a)*r,y:Math.sin(a)*r}}
-function fighter(uid,name,bot=false){return {id:uid,name,bot,...spawnPos(),vx:0,vy:0,angle:rand(-3.14,3.14),hp:175,maxhp:175,size:1,loot:0,kills:0,alive:true,attackAnim:0,attackAnimLen:.28,attackSide:1,swordSide:1,dashTimer:0,chargeActive:false,chargeTime:0,blueBlade:0,hurtTimer:0,skin:'classic',pet:'none',moveX:0,moveY:0,cd:0,chargeAt:0,charging:false,respawn:0,aiAngle:rand(-3.14,3.14),aiClock:0}}
-function newBot(){const labels=['Coral','Kraken','Reef','Storm','Anchor','Shadow','Pearl','Shark','Captain','Rogue','Cannon','Tide','Skull','Flint'];let b=fighter(id(),labels[Math.floor(rand(0,labels.length))]+'_'+Math.floor(rand(100,999)),true);b.skin=SKINS[Math.floor(rand(0,Math.min(23,6+island*2)))];b.pet=Math.random()<.5?PETS[Math.floor(rand(0,Math.min(16,4+island)))]: 'none';return b}
-function refill(){while(humans.size+bots.size<MAX){let b=newBot();bots.set(b.id,b)}while(humans.size+bots.size>MAX){let k=bots.keys().next().value;if(!k)break;bots.delete(k)}}
-function all(){return [...humans.values(),...bots.values()]}
-function emit(type,extra={}){const message=JSON.stringify({type,...extra});for(const ws of wss.clients)if(ws.readyState===WebSocket.OPEN)ws.send(message)}
-function spawnCoin(x,y,value=1){if(coins.length>=750)return;coins.push({id:nextCoinId++,x:clamp(x,-MAP,MAP),y:clamp(y,-MAP,MAP),value,twinkle:rand(0,6.28)})}
-function setupLoot(){coins=[];chests=[];for(let i=0;i<480;i++)spawnCoin(rand(-MAP+70,MAP-70),rand(-MAP+70,MAP-70),Math.floor(rand(2,8)));for(let i=0;i<25;i++)chests.push({id:id(),x:rand(-MAP+100,MAP-100),y:rand(-MAP+100,MAP-100),opened:false})}
-function startRound(){round++;island=(island+1)%ISLANDS.length;elapsed=0;storm={x:0,y:0,r:1850,phase:'prepare',seconds:12};boss=null;event=null;for(let p of all()){const fresh=fighter(p.id,p.name,p.bot);const keep={skin:p.skin,pet:p.pet};Object.assign(p,fresh,keep)}setupLoot();emit('round',{round,island})}
-function hurt(p,damage,by){if(!p.alive)return;p.hp=Math.max(0,p.hp-damage);p.hurtTimer=.15;if(p.hp<=0){p.alive=false;p.respawn=elapsed+4;if(by&&by!==p){by.kills++;by.loot+=Math.floor(p.loot*.5)+15;by.size=Math.min(2.5,by.size+.07)}for(let i=0;i<Math.min(12,Math.floor(p.loot/12));i++)spawnCoin(p.x+rand(-50,50),p.y+rand(-50,50),10);emit('kill',{by:by?.name||'Storm',victim:p.name})}}
-function hit(p,charged){if(!p.alive||p.cd>0)return;const reach=charged?126:92,damage=charged?53:28;p.cd=charged?.68:.43;p.attackAnim=charged?.44:.27;p.attackAnimLen=p.attackAnim;p.attackSide=p.swordSide;p.swordSide*=-1;if(charged){p.dashTimer=.22;p.blueBlade=.4}
- for(const t of all()){if(!t.alive||t.id===p.id)continue;let dx=t.x-p.x,dy=t.y-p.y,d=Math.hypot(dx,dy)||1;if(d<reach+22*t.size&&Math.cos(Math.atan2(dy,dx)-p.angle)>.14){t.x=clamp(t.x+dx/d*19,-MAP,MAP);t.y=clamp(t.y+dy/d*19,-MAP,MAP);hurt(t,damage,p)}}
- if(boss?.alive){const dx=boss.x-p.x,dy=boss.y-p.y,d=Math.hypot(dx,dy);if(d<reach+65&&Math.cos(Math.atan2(dy,dx)-p.angle)>.03){boss.hp-=damage; if(boss.hp<=0){boss.alive=false;for(let i=0;i<55;i++)spawnCoin(boss.x+rand(-140,140),boss.y+rand(-140,140),30);emit('boss_defeated',{by:p.name})}}}
+// Island Clash v31: SOLO MATCHES + ONLINE ADMIN ONLY.
+// Only announcements and global redeem codes are synced. No multiplayer arena.
+const express = require('express');
+const http = require('http');
+const WebSocket = require('ws');
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+const app = express();
+app.use(express.static(path.join(__dirname, 'public')));
+const server = http.createServer(app);
+const wss = new WebSocket.Server({server, path:'/ws'});
+const DATA_PATH = process.env.ADMIN_DATA_FILE || path.join(__dirname, 'admin-data.json');
+let data = {notices:[],codes:{}};
+try {
+  const saved = JSON.parse(fs.readFileSync(DATA_PATH,'utf8'));
+  if (saved && Array.isArray(saved.notices) && saved.codes && typeof saved.codes==='object') data=saved;
+} catch {}
+function save(){ try {fs.writeFileSync(DATA_PATH,JSON.stringify(data,null,2))}catch(e){console.error('Save failed:',e.message)} }
+function send(ws,obj){if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(obj))}
+function publish(obj){for(const ws of wss.clients)send(ws,obj)}
+function matchesSecret(candidate){
+  const correct = String(process.env.OWNER_SETUP_SECRET || '');
+  if(correct.length<16 || typeof candidate!=='string')return false;
+  const a=crypto.createHash('sha256').update(candidate).digest();
+  const b=crypto.createHash('sha256').update(correct).digest();
+  return crypto.timingSafeEqual(a,b);
 }
-function spawnBoss(){const pos=spawnPos(),hp=1500+island*550;boss={id:'boss',name:['Coconut King','Coral Tyrant','Ancient Guardian','Ember Titan','Storm King','Crystal Warden','Moon Specter','Sunken Emperor','Phantom Lord','Tide Monarch'][island],...pos,hp,maxhp:hp,alive:true,angle:0,attackAnim:0,attackAnimLen:.4,attackSide:1,swordSide:1,size:3,skin:'gold',pet:'none',cd:1};emit('boss_spawn',{name:boss.name})}
-function chooseEvent(){const ids=['gold','rain','wind','truce'];event={id:ids[Math.floor(rand(0,ids.length))],until:elapsed+22};emit('event',{id:event.id})}
-function update(dt){elapsed+=dt;const duration=ISLANDS[island][1];if(elapsed>=duration){startRound();return}
- if(!event&&elapsed>65&&Math.floor(elapsed)%85===0&&Math.random()<dt)chooseEvent();if(event&&elapsed>event.until)event=null;
- if(!boss&&island>=4&&round%2===0&&elapsed>52)spawnBoss();
- if(event?.id!=='truce')storm.r=Math.max(68,1850-1750*Math.pow(elapsed/duration,1.35));storm.phase=elapsed<18?'prepare':'advance';storm.seconds=Math.round(duration-elapsed);
- const fighters=all();for(const p of fighters){if(!p.alive){if(elapsed>=p.respawn){const fresh=fighter(p.id,p.name,p.bot);Object.assign(p,fresh,{skin:p.skin,pet:p.pet})}continue}
- p.cd=Math.max(0,p.cd-dt);p.attackAnim=Math.max(0,p.attackAnim-dt);p.dashTimer=Math.max(0,p.dashTimer-dt);p.blueBlade=Math.max(0,p.blueBlade-dt);p.hurtTimer=Math.max(0,p.hurtTimer-dt);
- if(p.bot){let t=null,best=Infinity;for(const q of fighters){if(q===p||!q.alive)continue;let d=(q.x-p.x)**2+(q.y-p.y)**2;if(d<best){best=d;t=q}}if(t&&best<430*430){let angle=Math.atan2(t.y-p.y,t.x-p.x);p.angle=angle;p.moveX=Math.cos(angle);p.moveY=Math.sin(angle);if(best<95*95&&p.cd<=0)hit(p,Math.random()<.22)}else{p.aiClock-=dt;if(p.aiClock<=0){p.aiClock=rand(1,4);p.aiAngle=rand(-3.14,3.14)}p.angle=p.aiAngle;p.moveX=Math.cos(p.angle)*.65;p.moveY=Math.sin(p.angle)*.65}}
- const speed=(p.dashTimer>0?700:(event?.id==='wind'?250:210))*(p.bot?.87:1);let len=Math.hypot(p.moveX,p.moveY);if(len>.01){p.vx=p.moveX/Math.max(len,1)*speed;p.vy=p.moveY/Math.max(len,1)*speed;p.x=clamp(p.x+p.vx*dt,-MAP+20,MAP-20);p.y=clamp(p.y+p.vy*dt,-MAP+20,MAP-20)}else p.vx=p.vy=0;
- if(Math.hypot(p.x-storm.x,p.y-storm.y)>storm.r)hurt(p,dt*14,null);
- for(let i=coins.length-1;i>=0;i--){let c=coins[i];if(Math.hypot(c.x-p.x,c.y-p.y)<32*p.size){p.loot+=c.value*(event?.id==='gold'?2:1);p.size=Math.min(2.5,p.size+.0018);coins.splice(i,1)}}
- for(let i=chests.length-1;i>=0;i--){const c=chests[i];if(Math.hypot(c.x-p.x,c.y-p.y)<34){chests.splice(i,1);p.loot+=75;for(let k=0;k<7;k++)spawnCoin(c.x+rand(-40,40),c.y+rand(-40,40),10)}}
- }
- if(coins.length<320)for(let i=0;i<45;i++)spawnCoin(rand(-MAP+40,MAP-40),rand(-MAP+40,MAP-40),Math.floor(rand(1,7)));
- if(event?.id==='rain'&&Math.random()<dt*8)for(let i=0;i<6;i++)spawnCoin(rand(-MAP,MAP),rand(-MAP,MAP),12);
- if(boss?.alive){boss.cd=Math.max(0,boss.cd-dt);boss.attackAnim=Math.max(0,boss.attackAnim-dt);let nearest=null,dist=1e9;for(let p of fighters){if(!p.alive)continue;const d=Math.hypot(p.x-boss.x,p.y-boss.y);if(d<dist){dist=d;nearest=p}}if(nearest){const a=Math.atan2(nearest.y-boss.y,nearest.x-boss.x);boss.angle=a;boss.x=clamp(boss.x+Math.cos(a)*dt*(78+island*6),-MAP,MAP);boss.y=clamp(boss.y+Math.sin(a)*dt*(78+island*6),-MAP,MAP);if(dist<120&&boss.cd<=0){boss.cd=1.1;boss.attackAnim=.4;hurt(nearest,20+island*3,null)}}}
-}
-const publicPlayer=p=>({id:p.id,name:p.name,bot:p.bot,x:Math.round(p.x),y:Math.round(p.y),vx:p.vx,vy:p.vy,angle:p.angle,hp:Math.round(p.hp),maxhp:p.maxhp,size:p.size,loot:p.loot,kills:p.kills,alive:p.alive,attackAnim:p.attackAnim,attackAnimLen:p.attackAnimLen,attackSide:p.attackSide,swordSide:p.swordSide,dashTimer:p.dashTimer,blueBlade:p.blueBlade,hurtTimer:p.hurtTimer,skin:p.skin,pet:p.pet});
-function snapshot(){return{type:'state',round,island,elapsed,storm,event:event?{id:event.id,time:event.until-elapsed}:null,players:all().map(publicPlayer),coins,chests,boss:boss?.alive?publicPlayer(boss):null,humans:humans.size,bots:bots.size}}
-function reply(ws,obj){if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(obj))}
-function message(ws,raw){if(raw.length>4096)return;let m;try{m=JSON.parse(raw)}catch{return}if(!m||typeof m!=='object')return;
- if(m.type==='signup'){const name=safeName(m.name),password=String(m.password||'');if(!name||password.length<8||password.length>128)return reply(ws,{type:'error',message:'Use a 3–16 character name and a passcode of at least 8 characters.'});const key=name.toLowerCase();if(accounts[key])return reply(ws,{type:'error',message:'That name is already registered.'});const owner=key==='britbox';if(owner&&(!process.env.OWNER_SETUP_SECRET||String(m.ownerSecret||'')!==process.env.OWNER_SETUP_SECRET))return reply(ws,{type:'error',message:'BRITBOX is reserved. Enter the owner setup secret from Render.'});const salt=crypto.randomBytes(16).toString('hex');accounts[key]={name:owner?'BRITBOX':name,salt,hash:hashPassword(password,salt),owner,created:Date.now()};saveAccounts();return login(ws,accounts[key])}
- if(m.type==='login'){const name=safeName(m.name),account=accounts[name?.toLowerCase()];const pwd=String(m.password||'');if(!account||!equalHex(hashPassword(pwd,account.salt),account.hash))return reply(ws,{type:'error',message:'Incorrect name or passcode.'});return login(ws,account)}
- if(m.type==='input'){if(!ws.account||!ws.player)return;const p=ws.player;let x=clamp(Number(m.x)||0,-1,1),y=clamp(Number(m.y)||0,-1,1);p.moveX=x;p.moveY=y;if(x*x+y*y>.01)p.angle=Math.atan2(y,x);if(m.charge===true&&!p.charging){p.charging=true;p.chargeAt=Date.now()}if(m.charge===false&&p.charging){const charged=Date.now()-p.chargeAt>=300;p.charging=false;hit(p,charged)}return}
- if(m.type==='admin'){if(!ws.account?.owner)return reply(ws,{type:'error',message:'Owner access required.'});switch(m.action){case 'boss':spawnBoss();break;case 'gold':if(ws.player)ws.player.loot+=1000;break;case 'island':island=clamp(Math.floor(Number(m.value)||0),0,9);startRound();break;case 'event':if(['gold','rain','wind','truce'].includes(m.value))event={id:m.value,until:elapsed+25};break;default:return}return reply(ws,{type:'notice',message:'Owner command applied.'})}
-}
-function login(ws,account){if(ws.player){humans.delete(ws.player.id);ws.player=null}for(const c of wss.clients){if(c!==ws&&c.account?.name.toLowerCase()===account.name.toLowerCase()){reply(c,{type:'error',message:'Account signed in on another device.'});c.close(4001,'Signed in elsewhere')}}const p=fighter(id(),account.name,false);humans.set(p.id,p);ws.account=account;ws.player=p;refill();reply(ws,{type:'authenticated',id:p.id,name:account.name,owner:account.owner});}
-wss.on('connection',ws=>{if(humans.size>=MAX){ws.close(1013,'Match full');return}ws.account=null;ws.player=null;ws.on('message',raw=>message(ws,raw));ws.on('close',()=>{if(ws.player)humans.delete(ws.player.id);refill()});ws.on('error',()=>{});reply(ws,{type:'hello',message:'Log in or sign up to enter the arena.'})});
-refill();setupLoot();setInterval(()=>update(STEP),50);setInterval(()=>{const msg=JSON.stringify(snapshot());for(const ws of wss.clients)if(ws.player&&ws.readyState===WebSocket.OPEN)ws.send(msg)},100);app.get('/health',(req,res)=>res.json({online:true,players:humans.size,bots:bots.size,round}));server.listen(process.env.PORT||3000,'0.0.0.0',()=>console.log('Island Clash v30 online on '+(process.env.PORT||3000)));
+function publicNotices(){return data.notices.slice(0,15)}
+function safelyParse(raw){try{return JSON.parse(raw.toString())}catch{return null}}
+const attempts = new WeakMap();
+wss.on('connection',ws=>{
+  ws.owner=false;
+  attempts.set(ws,{count:0,started:Date.now()});
+  send(ws,{type:'hello',notices:publicNotices(),status:'Solo mode • online admin connected'});
+  ws.on('message',raw=>{
+    if(raw.length>4096)return;
+    const m=safelyParse(raw);if(!m||typeof m!=='object')return;
+    if(m.type==='owner_login'){
+      const lim=attempts.get(ws);if(Date.now()-lim.started>60000){lim.started=Date.now();lim.count=0}
+      lim.count++;if(lim.count>5)return send(ws,{type:'error',message:'Too many attempts. Try again later.'});
+      ws.owner=matchesSecret(m.secret);
+      return send(ws,{type:'owner_status',owner:ws.owner,message:ws.owner?'Server admin unlocked.':'Incorrect admin secret or missing OWNER_SETUP_SECRET in Render.'});
+    }
+    if(m.type==='post_notice'){
+      if(!ws.owner)return send(ws,{type:'error',message:'Admin login required.'});
+      const message=String(m.message||'').trim().slice(0,400);
+      if(message.length<3)return send(ws,{type:'error',message:'Announcement is too short.'});
+      const notice={id:crypto.randomUUID(),text:message,at:Date.now(),by:'BRITBOX'};
+      data.notices.unshift(notice);data.notices=data.notices.slice(0,30);save();publish({type:'new_notice',notice});
+      return;
+    }
+    if(m.type==='create_code'){
+      if(!ws.owner)return send(ws,{type:'error',message:'Admin login required.'});
+      const code=String(m.code||'').trim().toUpperCase();
+      const kind=m.kind==='tokens'?'tokens':'gold';
+      const amount=Number(m.amount),uses=Number(m.uses),hours=Number(m.hours);
+      if(!/^[A-Z0-9_-]{4,24}$/.test(code)||!Number.isInteger(amount)||amount<1||amount>1000000||!Number.isInteger(uses)||uses<1||uses>10000||!Number.isFinite(hours)||hours<.25||hours>8760)
+        return send(ws,{type:'error',message:'Invalid code, amount, uses, or expiry.'});
+      if(data.codes[code])return send(ws,{type:'error',message:'Code already exists.'});
+      data.codes[code]={kind,amount,uses,expires:Date.now()+hours*3600000,usedBy:[]};save();
+      return send(ws,{type:'created',message:'Created shared code '+code});
+    }
+    if(m.type==='revoke_code'){
+      if(!ws.owner)return send(ws,{type:'error',message:'Admin login required.'});
+      const code=String(m.code||'').trim().toUpperCase();
+      delete data.codes[code];save();return send(ws,{type:'created',message:'Revoked '+code});
+    }
+    if(m.type==='redeem'){
+      const code=String(m.code||'').trim().toUpperCase();
+      const playerId=String(m.playerId||'');
+      if(!/^[a-f0-9-]{36}$/.test(playerId))return send(ws,{type:'error',message:'Invalid player ID.'});
+      const reward=data.codes[code];
+      if(!reward||reward.expires<Date.now()||reward.usedBy.length>=reward.uses||reward.usedBy.includes(playerId))return send(ws,{type:'error',message:'Code invalid, expired, full, or already redeemed.'});
+      reward.usedBy.push(playerId);save();return send(ws,{type:'reward',code,kind:reward.kind,amount:reward.amount});
+    }
+  });
+  ws.on('error',()=>{});
+});
+app.get('/health',(_req,res)=>res.json({ok:true,mode:'solo-with-online-admin',connections:wss.clients.size}));
+server.listen(Number(process.env.PORT)||3000,'0.0.0.0',()=>console.log('Island Clash v31 solo with online admin started'));
