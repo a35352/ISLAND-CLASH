@@ -1,7 +1,7 @@
 {
-  "name":"island-clash-admin-only",
-  "version":"31.0.0",
-  "private":true,
-  "scripts":{"start":"node server.js"},
-  "dependencies":{"express":"^4.21.2","ws":"^8.18.0"}
+  "name": "island-clash-admin-api",
+  "version": "32.0.0",
+  "private": true,
+  "scripts": {"start": "node server.js"},
+  "dependencies": {"express": "^4.21.2", "ws": "^8.18.0", "pg": "^8.13.1"}
 }
