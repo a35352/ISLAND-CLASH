@@ -13,7 +13,7 @@ The v32 server adds online accounts and shared administration to the original so
 
 ## Database
 
-The migration creates 11 tables in the private `island_clash` schema, enables row-level security, and removes access for Supabase API roles in that schema. The v32 server uses the configured PostgreSQL connection. The migration was exercised against an isolated PostgreSQL instance. The hosted migration is pending explicit authorization after Supabase automatic review declined the change. The pre-migration hosted security advisor returned no findings.
+The migration creates 11 tables in the private `island_clash` schema, enables row-level security, and removes access for Supabase API roles in that schema. The v32 server uses the configured PostgreSQL connection. The migration was exercised against an isolated PostgreSQL instance. Supabase recorded the applied migration as version `20261118151617`. All 11 hosted tables have RLS enabled and deny direct access to the three Supabase API roles. The security advisor returned only informational notices for the intentionally policy-free tables.
 
 ## Verification
 
@@ -23,9 +23,8 @@ Chromium exercised online login, literal rendering of bulletin text, owner inbox
 
 ## Before enabling on Render
 
-1. Authorize and apply the migration to Supabase project `ahwolkkpcqycfeahdfit`. Run the security advisor again and verify the private schema's table grants and RLS.
-2. Run a v32 preview against a test database. Verify the Render connection accesses the private schema over TLS and `/health` succeeds. Set `TRUST_PROXY_HOPS=1` only if the service is reachable through exactly one trusted proxy. Verify the login limiter with the deployed network topology.
-3. Provision BRITBOX using `POST /api/signup` over HTTPS from a trusted operator environment, with `username`, `password`, and `ownerSetupSecret` supplied privately. The setup secret must be at least 16 characters. Confirm owner access, then remove the setup secret from the service configuration.
-4. Review migration of v31 browser-local saves, vault discovery, and the cutover with the project owner. Switch the Render start command to `npm run start:v32` only after approval and preview verification.
+1. Run a v32 preview against a test database. Verify the Render connection accesses the private schema over TLS and `/health` succeeds. Set `TRUST_PROXY_HOPS=1` only if the service is reachable through exactly one trusted proxy. Verify the login limiter with the deployed network topology.
+2. Provision BRITBOX using `POST /api/signup` over HTTPS from a trusted operator environment, with `username`, `password`, and `ownerSetupSecret` supplied privately. The setup secret must be at least 16 characters. Confirm owner access, then remove the setup secret from the service configuration.
+3. Review migration of v31 browser-local saves, vault discovery, and the cutover with the project owner. Switch the Render start command to `npm run start:v32` only after approval and preview verification.
 
 V31 local accounts and progress keep their own save storage. V32 accounts start with a separate save and do not automatically import v31 profiles. The shared vault currently uses owner-distributed codes. Personal chest codes still work in solo play. Cross-device discovery of legendary keys or codes from chests and automatic shared vault rollover remain open.
