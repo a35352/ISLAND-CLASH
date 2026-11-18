@@ -634,7 +634,7 @@ function updateLoginUI(){
  $('accountStatus').textContent=ok?'✅ LOGGED IN: '+profile.name+((isOwnerTaggedName(profile.name)||(invKey(profile.name)===SKY_ADMIN_NAME&&delegatedNameMatches()))?' • 🛡 LOCAL ADMIN':'')+' • Your profile is loaded':
  exists?'🔒 '+$('nameInput').value+' • Enter login code to unlock (or set one for an older profile)':'✨ New pirate • Choose a 6+ character code and press LOG IN';
  $('logoutProfile').style.display=ok?'inline-block':'none';
- for(const id of ['shopBtn','passBtn','redeemBtn','backupBtn'])$(id).disabled=!ok;
+ for(const id of ['playBtn','shopBtn','passBtn','redeemBtn','backupBtn'])$(id).disabled=!ok;
  $('profileLoad').textContent=ok?'LOGGED IN':'LOG IN';
  $('leaderboardBtn').disabled=!ok;
  $('ownerBadge').style.display=ok&&isOwnerTaggedName(profile.name)?'inline-flex':'none';
@@ -990,7 +990,7 @@ $('passClaimAll').onclick=()=>{
 // This credential gate prevents casual in-game access in the same browser only.
 // All data belongs to the local HTML file; it is not server authentication.
 function pinHash(text){let h=2166136261;for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)}
-function openAdmin(){if(online.active)return;if((state!=='menu'&&state!=='playing')||signedInKey!==invKey(profile.name))return;closeLeaderboard();
+function openAdmin(){if((state!=='menu'&&state!=='playing')||signedInKey!==invKey(profile.name))return;closeLeaderboard();
  // Delegates still use the keyboard shortcut; only the actual owner sees a button.
  if(!ownerNameMatches()&&!delegatedNameMatches())return;
  adminOrigin=state;
@@ -1332,12 +1332,12 @@ function dashStepSpeed(f,dt){
 }
 // Tap to slash. A hold charges a directional dash; releasing unleashes the strike.
 // There is no independent instant dash: SPACE and SHIFT both operate the SAME charge move.
-function beginCharge(source){if(online.active)return;if(state!=='playing'||!player?.alive||player.attackCd>0||player.dashTimer>0)return;
+function beginCharge(source){if(state!=='playing'||!player?.alive||player.attackCd>0||player.dashTimer>0)return;
  if(chargeInputs.has(source))return;
  if(!chargeInputs.size){player.chargeActive=true;player.chargeTime=0;$('slashTouch').classList.add('charging')}
  chargeInputs.add(source);
 }
-function releaseCharge(source,cancel=false){if(online.active)return;if(!chargeInputs.has(source))return;chargeInputs.delete(source);if(chargeInputs.size)return;
+function releaseCharge(source,cancel=false){if(!chargeInputs.has(source))return;chargeInputs.delete(source);if(chargeInputs.size)return;
  $('slashTouch').classList.remove('charging');if(!player||!player.chargeActive)return;
  const held=player.chargeTime;player.chargeTime=0;player.chargeActive=false;
  if(cancel||state!=='playing'||!player.alive)return;
@@ -2064,7 +2064,7 @@ function tickLoggedInPlaytime(now){
   if($('leaderboard').style.display==='flex')renderLeaderboard();}
 }
 function loop(now){tickLoggedInPlaytime(now);const dt=Math.min(.033,Math.max(0,(now-lastTick)/1000));lastTick=now;frameTime=now*.001;
- refreshWorldStatus();if(state==='playing'&&!online.active)update(dt);else if(state==='menu'){camera.x+=Math.sin(frameTime*.16)*dt*4;camera.y+=Math.cos(frameTime*.14)*dt*3}
+ refreshWorldStatus();if(state==='playing')update(dt);else if(state==='menu'){camera.x+=Math.sin(frameTime*.16)*dt*4;camera.y+=Math.cos(frameTime*.14)*dt*3}
  if(now>toastUntil&&$('toast').style.opacity!=='0'){$('toast').style.opacity='0';$('toast').style.transform='translateX(-50%) translateY(-8px)'}
  render();requestAnimationFrame(loop)}
 
@@ -2276,49 +2276,26 @@ $('vaultAdminGift').onclick=()=>{
 };
 const originalRenderAdmin=renderAdmin;renderAdmin=function(){originalRenderAdmin();if(adminAuthenticated){$('adminVaultConfig').style.display=adminRole==='owner'?'block':'none';vaultAdminView()}};
 
-// ISLAND CLASH V30: multiplayer bridge INSIDE the original game closure.
-const online={active:false,ws:null,uid:'',owner:false,ready:false,previousIsland:islandId,latchedCharge:false};
-const style=document.createElement('style');style.textContent=`
-#onlineBtn{position:fixed;z-index:23;right:12px;top:12px;background:#06746b;color:white;border:2px solid #b6fff0;border-radius:12px;padding:12px 17px;font-weight:900;box-shadow:0 5px 14px #1438}
-#onlineLogin{position:fixed;z-index:45;inset:0;display:none;place-items:center;background:#102e25d9;font:bold 14px Trebuchet MS,Arial}
-#onlineCard{width:min(450px,95vw);max-height:90vh;overflow:auto;padding:22px;border:4px solid #3b916e;border-radius:19px;background:#f5fbe7;color:#173a2d;box-shadow:0 18px 80px #001a16}
-#onlineCard h2{margin:0 0 10px}#onlineCard label{display:block;margin:9px 0 4px}#onlineCard input{width:100%;padding:11px;border:1px solid #779f88;border-radius:9px;font:inherit}
-#onlineCard button,#onlineAdmin button{padding:10px;border-radius:9px;background:#1f7760;color:white;margin:5px 3px;border:0;font-weight:900}
-#onlineCard #onlineClose{background:#992a28}#onlineStatus{padding:10px;font-size:12px;min-height:30px}
-#onlineGameHud{position:fixed;z-index:26;left:50%;top:77px;transform:translateX(-50%);display:none;padding:8px 12px;background:#164d3dbb;color:white;border-radius:9px;font:bold 12px Trebuchet MS;pointer-events:none}
-#onlineExit{position:fixed;z-index:25;right:12px;bottom:12px;display:none;background:#9d2725;color:white;border-radius:9px;padding:10px;border:0;font-weight:900}
-#onlineAdmin{position:fixed;z-index:27;left:12px;bottom:12px;display:none;padding:9px;background:#1d4a3add;color:white;border-radius:11px;max-width:305px}
-`;document.head.append(style);
-const loginLayer=document.createElement('div');loginLayer.id='onlineLogin';loginLayer.innerHTML=`<div id="onlineCard"><h2>🌐 ISLAND CLASH MULTIPLAYER</h2><p>Sign in to the server (separate from old offline accounts).</p><label>NAME</label><input id="onlineName" maxlength="16" autocomplete="username" placeholder="Pirate name"><label>NEW PASSCODE</label><input id="onlinePass" type="password" autocomplete="current-password" placeholder="8+ characters"><label>BRITBOX SETUP SECRET (first signup only)</label><input id="onlineOwnerSecret" type="password" autocomplete="off" placeholder="Only the owner needs this"><div><button id="onlineSignIn">LOG IN</button><button id="onlineSignUp">SIGN UP</button><button id="onlineClose">CLOSE</button></div><div id="onlineStatus">Connect to the server to play.</div></div>`;document.body.append(loginLayer);
-const onlineButton=document.createElement('button');onlineButton.id='onlineBtn';onlineButton.textContent='🌐 PLAY ONLINE';onlineButton.style.display='none';document.body.append(onlineButton);$('playBtn').textContent='PLAY ONLINE';$('playBtn').onclick=()=>onlineButton.click();
-const onlineHud=document.createElement('div');onlineHud.id='onlineGameHud';document.body.append(onlineHud);
-const onlineExit=document.createElement('button');onlineExit.id='onlineExit';onlineExit.textContent='EXIT ONLINE';document.body.append(onlineExit);
-const onlineAdmin=document.createElement('div');onlineAdmin.id='onlineAdmin';onlineAdmin.innerHTML=`<b>🛡 SERVER OWNER</b><div><button data-command="boss">SPAWN BOSS</button><button data-command="gold">+1000 GOLD</button><button data-command="event">GOLD RUSH</button><button data-command="island">NEXT ISLAND</button></div>`;document.body.append(onlineAdmin);
-function onlineMessage(s){$('onlineStatus').textContent=s}
-function onlineSend(o){if(online.ws?.readyState===WebSocket.OPEN)online.ws.send(JSON.stringify(o))}
-function onlineStop(){online.active=false;online.ready=false;online.owner=false;online.uid='';online.ws?.close();online.ws=null;loginLayer.style.display='none';onlineHud.style.display='none';onlineExit.style.display='none';onlineAdmin.style.display='none';$('authDock').style.display='';onlineButton.style.display='';$('menu').style.display='flex';state='menu';document.body.classList.remove('isPlaying');islandId=online.previousIsland;player=null;boss=null;bots=[];coins=[];chests=[];initStorm();generateTerrain();refreshMenu()}
-onlineButton.onclick=()=>{loginLayer.style.display='grid';$('onlineName').value=profile.name||'';onlineMessage('Choose LOG IN or SIGN UP.');const protocol=location.protocol==='https:'?'wss:':'ws:';online.ws?.close();const ws=new WebSocket(protocol+'//'+location.host+'/ws');online.ws=ws;ws.onopen=()=>onlineMessage('Connected. Sign in or make a new account.');ws.onclose=()=>{if(online.ws!==ws)return;onlineMessage('Disconnected. Reopen multiplayer to reconnect.');if(online.active)onlineStop()};ws.onerror=()=>onlineMessage('Could not connect. Check Render → Deploys / Logs.');ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}
- if(m.type==='error'){onlineMessage(m.message);return}
- if(m.type==='authenticated'){online.active=true;online.ready=true;online.uid=m.id;online.owner=!!m.owner;online.previousIsland=islandId;loginLayer.style.display='none';onlineButton.style.display='none';$('menu').style.display='none';$('results').style.display='none';$('pause').style.display='none';state='playing';document.body.classList.add('isPlaying');onlineHud.style.display='block';onlineExit.style.display='block';$('authDock').style.display='none';onlineAdmin.style.display=online.owner?'block':'none';onlineHud.textContent='Connecting to the shared arena...';return}
- if(m.type==='state'&&online.active){islandId=Number(m.island)||0;if(online.mapIsland!==islandId){online.mapIsland=islandId;generateTerrain()}elapsed=m.elapsed;kills=0;storm={...m.storm,seeds:[{x:0,y:0,r:1850}]};activeEvent=m.event;coins=m.coins.map(c=>({...c,gone:false}));chests=m.chests.map(c=>({...c,shine:0,bossChest:false}));let local=m.players.find(p=>p.id===online.uid);if(!local)return;
- function adapt(p,friend){const skin=SKINS.find(s=>s.id===p.skin)||SKINS[0];return {...p,friend,scale:p.size||1,r:21,color:skin.color,botSkin:p.skin,botPet:p.pet,loot:p.loot||0,attackAnim:p.attackAnim||0,attackAnimLen:p.attackAnimLen||.28,attackSide:p.attackSide||1,swordSide:p.swordSide||1,chargeActive:false,chargeTime:0,blueBlade:p.blueBlade||0,hurtTimer:p.hurtTimer||0,aiTarget:null,buffs:{}}}
- player=adapt(local,true);bots=m.players.filter(p=>p.id!==online.uid).map(p=>adapt(p,false));kills=player.kills;boss=m.boss?{...adapt(m.boss,false),bossSpec:WORLD_BOSSES[bossTier()],bossWindup:0,bossPulse:0}:null;camera.x=player.x;camera.y=player.y;camera.zoom=clamp(1.03/(player.scale**.22),.68,1);onlineHud.textContent=`🌐 ${m.humans} players + ${m.bots} bots • Round ${m.round} • ${ISLANDS[islandId].name} • ${Math.ceil(m.elapsed)}s`;return}
- if(m.type==='kill'||m.type==='boss_spawn'||m.type==='boss_defeated'||m.type==='notice')showToast(m.message||m.name||'Pirate defeated!');
- };
-};
-$('onlineClose').onclick=()=>{loginLayer.style.display='none';online.ws?.close();online.ws=null};
-$('onlineSignIn').onclick=()=>onlineSend({type:'login',name:$('onlineName').value,password:$('onlinePass').value});
-$('onlineSignUp').onclick=()=>onlineSend({type:'signup',name:$('onlineName').value,password:$('onlinePass').value,ownerSecret:$('onlineOwnerSecret').value});
-onlineExit.onclick=onlineStop;
-for(const b of onlineAdmin.querySelectorAll('[data-command]'))b.onclick=()=>{const action=b.dataset.command;onlineSend({type:'admin',action,value:action==='event'?'gold':action==='island'?(islandId+1)%10:null})};
-let onlineCharge=false;function onlineChargeStart(){if(!online.active||onlineCharge)return;onlineCharge=true;onlineSend({type:'input',x:0,y:0,charge:true})}function onlineChargeEnd(){if(!online.active||!onlineCharge)return;onlineCharge=false;onlineSend({type:'input',x:0,y:0,charge:false})}
-addEventListener('keydown',e=>{if(!online.active||e.target instanceof HTMLInputElement)return;if((e.code==='Space'||e.code.startsWith('Shift'))&&!e.repeat)onlineChargeStart()});
-addEventListener('keyup',e=>{if(!online.active)return;if(e.code==='Space'||e.code.startsWith('Shift'))onlineChargeEnd()});
-$('slashTouch').addEventListener('pointerdown',onlineChargeStart);$('slashTouch').addEventListener('pointerup',onlineChargeEnd);$('slashTouch').addEventListener('pointercancel',onlineChargeEnd);
-setInterval(()=>{if(!online.active||!online.ready)return;let input=motionInput();onlineSend({type:'input',x:input.x,y:input.y})},50);
-
+// Server admin bridge: the real match stays entirely local; no online players.
+window.addEventListener('island-admin-reward',event=>{
+  const detail=event.detail||{};
+  if(!loggedInForInput())return showToast('Log into your pirate account before redeeming.');
+  const amount=Math.floor(Number(detail.amount)||0);
+  if(amount<1||amount>1000000||!['gold','tokens'].includes(detail.kind))return;
+  const code=String(detail.code||'').toUpperCase();
+  if(profile.codes.includes('GLOBAL_'+code))return;
+  profile.codes.push('GLOBAL_'+code);
+  if(detail.kind==='tokens')profile.basicTokens=(profile.basicTokens||0)+amount;
+  else profile.bank=(profile.bank||0)+amount;
+  save();refreshMenu();showToast('🌐 Global code: +'+amount+' '+detail.kind+'!');
+});
+window.addEventListener('island-admin-notice',event=>{
+  const message=String(event.detail?.text||'').slice(0,180);
+  if(message)showToast('📣 BRITBOX: '+message);
+});
 refreshMenu();$('authName').value=profile.name;setAuthMode('login');showAccountDock(true);generateTerrain();camera.x=0;camera.y=0;camera.zoom=.9;requestAnimationFrame(loop);
 })();
 </script>
+<script src="/admin-online.js"></script>
 </body>
 </html>
