@@ -241,7 +241,7 @@ button:disabled{cursor:not-allowed;opacity:.52;filter:grayscale(.4)}
       </section>
     </div>
     <table id="statsTable"><thead><tr><th>RECORDS</th><th>LAST</th><th>BEST</th><th>TOTAL</th></tr></thead><tbody id="statsBody"></tbody></table>
-    <div class="smallNote">100-player matches (1 human + 99 bots offline) • Playtime counts while logged in anywhere in the game • Local bulletin and reports are visible only on this browser • BACKUP before updating • Saves every 2 minutes</div>
+    <div class="smallNote">Offline solo • Playtime counts while logged in anywhere in the game • Local bulletin and reports are visible only on this browser • BACKUP before updating • Saves every 2 minutes</div>
   </main>
 </div>
 <div id="results"><div class="resultsCard"><h1 id="resultTitle">ROUND OVER</h1><p id="resultSubtitle"></p><div id="resultLines" class="resultLines"></div><div class="resultTotal" id="resultTotal"></div><button id="cashBtn" class="resultAction">🪙 CASH IN GOLD</button><div id="claimed"></div><div id="afterActions" class="afterActions"><button id="againBtn">PLAY AGAIN</button><button id="homeBtn">HOME</button></div></div></div>
@@ -249,8 +249,8 @@ button:disabled{cursor:not-allowed;opacity:.52;filter:grayscale(.4)}
 <div id="shop"><div class="overlayPanel"><div class="overlayHead"><h2>🪙 PIRATE SHOP</h2><button id="shopClose" class="closeOverlay">✕ CLOSE</button></div><p style="margin:9px 0">Banked gold: <b id="shopGold">0</b> 🪙 • Bought items stay unlocked in this browser.</p><div id="shopTabs"><button id="skinsTab">SKINS</button><button id="petsTab">PETS</button><button id="trailsTab">TRAILS</button><button id="tokensTab">TOKENS</button><button id="upgradesTab">UPGRADES</button><button id="weeklyTab">WEEKLY</button></div><div class="smallNote" id="shopCurrency">🗝 Tokens: 0</div><div id="shopItems"></div></div></div>
 <div id="vaultPanel" role="dialog" aria-label="Treasure vault"><div class="overlayPanel"><div class="overlayHead"><h2>🔐 LEGENDARY VAULT</h2><button id="vaultClose" class="closeOverlay" type="button">✕ CLOSE</button></div><p class="smallNote">Only one legendary key or code can be discovered each vault cycle on this browser. Each chest has a 0.5% chance while the prize remains undiscovered. The owner chooses a prize; after the unique rare key or code is redeemed, a new vault cycle starts automatically. Personal reward codes never reset it. Codes are player-specific and can't be used by other profiles.</p><div id="vaultStatus"></div><div id="vaultOwnerSecret" class="vaultOwnerSecret" style="display:none" role="status"></div><div class="vaultFields"><input id="vaultCodeInput" maxlength="32" placeholder="Enter your vault or personal code" aria-label="Vault or personal code"><button id="vaultRedeem" type="button">REDEEM CODE</button></div><button class="vaultAction" id="vaultOpenKey" type="button">🗝 OPEN USING MY KEY</button><p id="vaultPersonalList" class="smallNote"></p></div></div><div id="achievementsPanel"><div class="overlayPanel"><div class="overlayHead"><h2>🏆 ACHIEVEMENTS & TAGS</h2><button id="achieveClose" class="closeOverlay">✕ CLOSE</button></div><p class="smallNote">Complete goals to earn permanent local server-style tags. Equip one tag at a time. These are local badges, not a live server role.</p><div id="achieveItems"></div></div></div>
 <div id="battlePass"><div class="overlayPanel"><div class="overlayHead"><h2>🏆 ISLAND BATTLE PASS</h2><button id="passClose" class="closeOverlay">✕ CLOSE</button></div><div class="passTop"><div><b id="passLevel">LEVEL 1</b><div id="passStatus">Free Pass · Pro locked</div></div><div class="passXP">XP: <b id="passXP">0</b> <span id="passNext">/ 120</span></div></div><div class="passProgress"><div id="passProgressFill"></div></div><p class="smallNote">Earn XP from treasure, eliminations, and survival. Claim free rewards after reaching each tier. The Pro track is granted ONLY by a local admin.</p><div class="passClaimRow"><button id="passClaimAll" type="button">🎁 CLAIM ALL AVAILABLE</button><span id="passClaimSummary">Collect every earned reward at once.</span></div><div id="passItems"></div></div></div>
-<div id="leaderboard" role="dialog" aria-label="Local pirate leaderboard"><div class="overlayPanel"><div class="overlayHead"><h2>🏆 PIRATE LEADERBOARD</h2><button id="leaderboardClose" class="closeOverlay" type="button">✕ CLOSE</button></div><p class="smallNote leaderboardNote">Lifetime records from accounts saved in this browser. This is not an online server leaderboard.</p><div class="leaderboardTabs"><button data-sort="kills" class="selected">⚔ KILLS</button><button data-sort="wins">🏆 WINS</button><button data-sort="playtime">⏱ PLAYTIME</button></div><div class="leaderboardScroll"><table class="leaderboardTable"><thead><tr><th>RANK</th><th>PIRATE</th><th>⚔ KILLS</th><th>🏆 WINS</th><th>⏱ PLAYTIME</th></tr></thead><tbody id="leaderboardRows"></tbody></table></div><div class="smallNote">BRITBOX's admin tag is a local game badge until multiplayer servers are added.</div></div></div>
-<div id="admin"><div class="overlayPanel"><div class="overlayHead"><h2>🛡 LOCAL ADMIN</h2><button id="adminClose" class="closeOverlay">✕ CLOSE</button></div><div class="adminText">Only players with a PIN set on <b>this browser</b> can open this panel. The owner can add player names and PINs here. <b>Important:</b> This offline HTML file cannot securely identify people, sync invitations, or prevent someone editing their copy. Real private multiplayer admin access requires a server with accounts.</div><div id="adminAuth"><div id="authLabel">Enter admin PIN</div><div class="adminForm"><input id="adminPin" class="adminField" type="password" autocomplete="off" maxlength="48" placeholder="Admin PIN (6+ characters)"><button id="adminLogin">UNLOCK</button></div><div class="smallNote" id="authHelp">First use: set the owner's PIN in this browser.</div></div><div id="adminControls" style="display:none"><div id="adminStatus"></div><div class="adminGrid"><button data-admin="gold">+1,000 GOLD</button><button data-admin="heal">HEAL IN ROUND</button><button data-admin="coins">SPAWN COINS</button><button data-admin="spawnchests">📦 SPAWN 10 CHESTS</button><button data-admin="eventgold">✨ GOLD RUSH</button><button data-admin="eventrain">🌧 TREASURE RAIN</button><button data-admin="eventwind">🌬 SWIFT WINDS</button><button data-admin="eventtruce">🧊 STORM TRUCE</button><button data-admin="spawnboss">👑 SPAWN BOSS</button><button data-admin="spawnbots">🤖 SPAWN 10 BOTS</button><button data-admin="freezestorm" id="adminFreezeStorm">🧊 FREEZE STORM</button><button data-admin="shutdown" id="adminShutdown">⏸ START SHUTDOWN</button><button data-admin="next">NEXT ISLAND (OVERRIDE)</button><button data-admin="bots">TOGGLE BOTS</button><button data-admin="logout">LOCK PANEL</button></div><div class="adminForm" style="flex-wrap:wrap;margin:7px 0;padding:9px;background:#d6eee3;border-radius:10px"><label for="adminTestMap" style="flex:1 0 100%;font-weight:900">🗺 TEST ANY ISLAND (NO PROGRESS CHANGE)</label><select id="adminTestMap" class="adminField" style="flex:1;min-width:130px"></select><button type="button" id="adminSwitchMap">LOAD TEST MAP</button><div class="smallNote" style="width:100%">Starts a practice match on the selected island. Practice matches do not give gold, wins or Battle Pass XP. Select your normal island to return to regular matches.</div></div><section id="adminGiftCodes" style="border:2px solid #5c8e7e;border-radius:12px;padding:10px;margin:12px 0;background:#d5ebde">
+<div id="leaderboard" role="dialog" aria-label="Local pirate leaderboard"><div class="overlayPanel"><div class="overlayHead"><h2>🏆 PIRATE LEADERBOARD</h2><button id="leaderboardClose" class="closeOverlay" type="button">✕ CLOSE</button></div><p class="smallNote leaderboardNote">Lifetime records from accounts saved in this browser. This is not an online server leaderboard.</p><div class="leaderboardTabs"><button data-sort="kills" class="selected">⚔ KILLS</button><button data-sort="wins">🏆 WINS</button><button data-sort="playtime">⏱ PLAYTIME</button></div><div class="leaderboardScroll"><table class="leaderboardTable"><thead><tr><th>RANK</th><th>PIRATE</th><th>⚔ KILLS</th><th>🏆 WINS</th><th>⏱ PLAYTIME</th></tr></thead><tbody id="leaderboardRows"></tbody></table></div><div class="smallNote">BRITBOX is a reserved local username. Server-side authentication is required to secure ownership across devices.</div></div></div>
+<div id="admin"><div class="overlayPanel"><div class="overlayHead"><h2>🛡 LOCAL ADMIN</h2><button id="adminClose" class="closeOverlay">✕ CLOSE</button></div><div class="adminText">Only players with a PIN set on <b>this browser</b> can open this panel. The owner can add player names and PINs here. <b>Important:</b> This offline HTML file cannot securely identify people, sync invitations, or prevent someone editing their copy. Real private multiplayer admin access requires a server with accounts.</div><div id="adminAuth"><div id="authLabel">Enter admin PIN</div><div class="adminForm"><input id="adminPin" class="adminField" type="password" autocomplete="off" maxlength="48" placeholder="Admin PIN (6+ characters)"><button id="adminLogin">UNLOCK</button></div><div class="smallNote" id="authHelp">Only the original protected BRITBOX profile can unlock owner tools.</div></div><div id="adminControls" style="display:none"><div id="adminStatus"></div><div class="adminGrid"><button data-admin="gold">+1,000 GOLD</button><button data-admin="heal">HEAL IN ROUND</button><button data-admin="coins">SPAWN COINS</button><button data-admin="spawnchests">📦 SPAWN 10 CHESTS</button><button data-admin="eventgold">✨ GOLD RUSH</button><button data-admin="eventrain">🌧 TREASURE RAIN</button><button data-admin="eventwind">🌬 SWIFT WINDS</button><button data-admin="eventtruce">🧊 STORM TRUCE</button><button data-admin="spawnboss">👑 SPAWN BOSS</button><button data-admin="spawnbots">🤖 SPAWN 10 BOTS</button><button data-admin="freezestorm" id="adminFreezeStorm">🧊 FREEZE STORM</button><button data-admin="shutdown" id="adminShutdown">⏸ START SHUTDOWN</button><button data-admin="next">NEXT ISLAND (OVERRIDE)</button><button data-admin="bots">TOGGLE BOTS</button><button data-admin="logout">LOCK PANEL</button></div><div class="adminForm" style="flex-wrap:wrap;margin:7px 0;padding:9px;background:#d6eee3;border-radius:10px"><label for="adminTestMap" style="flex:1 0 100%;font-weight:900">🗺 TEST ANY ISLAND (NO PROGRESS CHANGE)</label><select id="adminTestMap" class="adminField" style="flex:1;min-width:130px"></select><button type="button" id="adminSwitchMap">LOAD TEST MAP</button><div class="smallNote" style="width:100%">Starts a practice match on the selected island. Practice matches do not give gold, wins or Battle Pass XP. Select your normal island to return to regular matches.</div></div><section id="adminGiftCodes" style="border:2px solid #5c8e7e;border-radius:12px;padding:10px;margin:12px 0;background:#d5ebde">
 <h3 style="margin:2px 0 7px">🎟️ CUSTOM REDEEM CODES</h3>
 <div class="smallNote">Choose the code, reward, total uses and expiry. Saved for all local accounts on this browser. Codes are not shared across computers until the online server is hosted.</div>
 <div class="adminForm" style="flex-wrap:wrap;gap:6px">
@@ -282,7 +282,7 @@ button:disabled{cursor:not-allowed;opacity:.52;filter:grayscale(.4)}
 <section id="bugSection" class="communitySection" hidden><p class="sectionExplainer">Found something broken? Explain what happened and how to reproduce it. Your report goes to the local admin inbox.</p><label for="bugCategory">TYPE OF BUG</label><select id="bugCategory"><option value="Gameplay">Gameplay / combat</option><option value="Accounts">Account / saves</option><option value="Shop">Shop / pets / pass</option><option value="Other">Something else</option></select><label for="bugText">WHAT HAPPENED?</label><textarea id="bugText" maxlength="700" rows="5" placeholder="What were you doing? What went wrong?" required></textarea><button id="sendBug" type="button" class="communityPrimary">SEND BUG REPORT</button></section>
 <section id="contactSection" class="communitySection" hidden><p class="sectionExplainer">Send a message to the local admin inbox. Include your game name so admins know who wrote it.</p><label for="contactTopic">TOPIC</label><select id="contactTopic"><option>Question</option><option>Account help</option><option>Gameplay feedback</option><option>Other</option></select><label for="contactText">MESSAGE FOR ADMIN</label><textarea id="contactText" maxlength="700" rows="5" placeholder="What would you like to ask the admin?"></textarea><button id="sendContact" type="button" class="communityPrimary">SEND TO ADMIN</button></section><section id="applySection" class="communitySection" hidden><p class="sectionExplainer">Tell the admins why you’d make a good moderator. Applying does not automatically give admin access.</p><label for="applyText">WHY DO YOU WANT TO BE AN ADMIN?</label><textarea id="applyText" maxlength="700" rows="5" placeholder="How would you help keep the game fun?" required></textarea><button id="sendApply" type="button" class="communityPrimary">SEND APPLICATION</button></section><div id="communityStatus" role="status" class="communityStatus"></div>
 </div></div>
-<div id="updateNotice" role="dialog" aria-label="Island Clash update notes"><div class="overlayPanel updatePanel"><div class="updateMark">✨ NEW UPDATE</div><h2>ISLAND CLASH <span>v26</span></h2><p>Big Maps, Boss Radar & 25K Vault</p><ul><li>🗺 Maps expanded by 26% in width, with 100 total pirate slots filled by bots.</li><li>👑 The world boss appears on the minimap and spawns automatically every second completed round on islands 5–10.</li><li>🔐 The base Legendary Vault reward is now 25,000 gold.</li><li>🎉 Live island events: Gold Rush, Treasure Rain, Swift Winds, and Storm Truce.</li><li>👑 Six unique bosses on islands 5–10; health, speed, attacks, and rewards scale up.</li><li>🤖 Bots patrol when alone, attack visible bosses, and can be hit by boss shockwaves.</li><li>💰 Bosses drop large, clearly visible Royal Coins and a Royal Chest; coins are briefly protected from bot magnet pickup.</li><li>🎁 Defeat a boss for bonus growth, piles of coins, and a Royal Chest with a 2% vault-code chance.</li><li>🛡 Admins can launch any event or summon a boss for testing.</li><li>⚔️ Point-blank sword hits now connect when pirates touch.</li><li>🗺 Admins can load any island for practice without changing saved progression.</li><li>🧭 Smoother directional turning and modest steering while dashing.</li><li>🏆 Complete new achievement challenges and equip earned pirate tags.</li><li>✨ Purchase trails and spend chest tokens in the Token Market.</li><li>⚔️ Permanent skin and pet upgrades: small bonuses, three levels and escalating gold prices.</li><li>🐾 Bots use varied island-appropriate skins and companions.</li><li>💥 Stronger sword knockback after successful hits.</li><li>🔐 Owner-configurable vault with one globally available key per reset (local saves only).</li><li>✨ Weekly-only skins, rare player-specific chest codes and new achievement tags.</li><li>🛡 Sword-on-sword clashes deflect damage; only body hits hurt.</li><li>🤖 Bots survive longer, with tougher AI on advanced islands.</li><li>🗺 Enemy dots removed from minimap, and admins can view the vault code.</li><li>🔐 Rare vault codes are random, visible only to their finder, and the vault refreshes after a successful big-prize claim.</li><li>🎟 Personal chest reward codes stay valid independently and never reset the legendary vault.</li><li>🧪 Admins can test-claim the live vault, gift its prize, or assign the current code to a saved player profile.</li><li>❤️ Better starting health, less bot damage, and slower storm damage for players.</li><li>🎲 Random safe spawn positions each round, with bots kept away from the spawn.</li><li>🛡 Admin: spawn 10 chests or 10 bots while a match is running.</li><li>🧊 Admins can freeze or unfreeze storm advancement during matches.</li><li>⏸ Temporary Shutdown pauses non-admin games on this browser, while verified admins keep playing.</li></ul><button id="updateDismiss" type="button" class="communityPrimary">AWESOME — LET’S PLAY!</button><div class="tinyWarning">Offline version: posts and reports remain on this browser.</div></div></div>
+<div id="updateNotice" role="dialog" aria-label="Island Clash update notes"><div class="overlayPanel updatePanel"><div class="updateMark">✨ NEW UPDATE</div><h2>ISLAND CLASH <span>v26</span></h2><p>Big Maps, Boss Radar & 25K Vault</p><ul><li>🗺 Maps expanded by 26% in width, with up to 165 bots on late islands.</li><li>👑 The world boss appears on the minimap and spawns automatically every second completed round on islands 5–10.</li><li>🔐 The base Legendary Vault reward is now 25,000 gold.</li><li>🎉 Live island events: Gold Rush, Treasure Rain, Swift Winds, and Storm Truce.</li><li>👑 Six unique bosses on islands 5–10; health, speed, attacks, and rewards scale up.</li><li>🤖 Bots patrol when alone, attack visible bosses, and can be hit by boss shockwaves.</li><li>💰 Bosses drop large, clearly visible Royal Coins and a Royal Chest; coins are briefly protected from bot magnet pickup.</li><li>🎁 Defeat a boss for bonus growth, piles of coins, and a Royal Chest with a 2% vault-code chance.</li><li>🛡 Admins can launch any event or summon a boss for testing.</li><li>⚔️ Point-blank sword hits now connect when pirates touch.</li><li>🗺 Admins can load any island for practice without changing saved progression.</li><li>🧭 Smoother directional turning and modest steering while dashing.</li><li>🏆 Complete new achievement challenges and equip earned pirate tags.</li><li>✨ Purchase trails and spend chest tokens in the Token Market.</li><li>⚔️ Permanent skin and pet upgrades: small bonuses, three levels and escalating gold prices.</li><li>🐾 Bots use varied island-appropriate skins and companions.</li><li>💥 Stronger sword knockback after successful hits.</li><li>🔐 Owner-configurable vault with one globally available key per reset (local saves only).</li><li>✨ Weekly-only skins, rare player-specific chest codes and new achievement tags.</li><li>🛡 Sword-on-sword clashes deflect damage; only body hits hurt.</li><li>🤖 Bots survive longer, with tougher AI on advanced islands.</li><li>🗺 Enemy dots removed from minimap, and admins can view the vault code.</li><li>🔐 Rare vault codes are random, visible only to their finder, and the vault refreshes after a successful big-prize claim.</li><li>🎟 Personal chest reward codes stay valid independently and never reset the legendary vault.</li><li>🧪 Admins can test-claim the live vault, gift its prize, or assign the current code to a saved player profile.</li><li>❤️ Better starting health, less bot damage, and slower storm damage for players.</li><li>🎲 Random safe spawn positions each round, with bots kept away from the spawn.</li><li>🛡 Admin: spawn 10 chests or 10 bots while a match is running.</li><li>🧊 Admins can freeze or unfreeze storm advancement during matches.</li><li>⏸ Temporary Shutdown pauses non-admin games on this browser, while verified admins keep playing.</li></ul><button id="updateDismiss" type="button" class="communityPrimary">AWESOME — LET’S PLAY!</button><div class="tinyWarning">Offline version: posts and reports remain on this browser.</div></div></div>
 <button id="leaderboardQuick" type="button" aria-label="Open leaderboard">🏆 RANKS</button><button id="ownerAdminButton" type="button" aria-label="Owner admin panel">🛡 ADMIN</button><div id="toast" role="status"></div><div id="gameHint">WASD — MOVE • SPACE TAP — SWING • HOLD / RELEASE — DASH • 📦 CHESTS: BASIC TOKENS + 10% BOOST • ESC — PAUSE</div>
 <div id="touchUI"><div id="joyBase"><div id="joyStick"></div></div><button id="slashTouch" class="touchAction">⚔<br>TAP / HOLD</button><button id="pauseTouch">Ⅱ</button></div>
 <script>
@@ -521,8 +521,12 @@ function applyAccount(name){const d=profile.accountsByName[invKey(name)]||newAcc
 // v12: rename the locally configured owner to BRITBOX without resetting account,
 // inventory, admin PIN, or login-code hashes. Do not overwrite a distinct BRITBOX account.
 function migrateOwnerToBRITBOX(){
- const dest=invKey(OWNER_DISPLAY_NAME),owner=String(profile.admin?.ownerName||profile.name||'').trim();
+ const dest=invKey(OWNER_DISPLAY_NAME),owner=String(profile.admin?.ownerName||'').trim();
  const source=invKey(owner);let changed=false;
+ // SECURITY PATCH: Never treat a random first/new profile as the owner.
+ // Only migrate a previously configured owner with a saved credential.
+ if(!profile.admin?.ownerHash||!owner||!profile.accountsByName?.[source]||
+    !(profile.loginCodes?.[source]||profile.localPins?.[source]))return false;
  if(source!==dest){
    if(profile.accountsByName[dest]){
      profile.renameNotice='BRITBOX already exists; the old owner was not overwritten. Back up both accounts.';
@@ -550,7 +554,9 @@ function migrateOwnerToBRITBOX(){
  return changed;
 }
 migrateOwnerToBRITBOX();
-function isOwnerTaggedName(name){return invKey(name)==='britbox'&&invKey(profile.admin?.ownerName)==='britbox'&&!!profile.accountsByName?.britbox}
+function hasProtectedOwner(){return invKey(profile.admin?.ownerName)==='britbox'&&!!profile.admin?.ownerHash&&
+ !!profile.accountsByName?.britbox&&!!(profile.loginCodes?.britbox||profile.localPins?.britbox)}
+function isOwnerTaggedName(name){return invKey(name)==='britbox'&&hasProtectedOwner()}
 // Local passcodes use a unique salt + PBKDF2 when Web Crypto is available.
 // This deters casual access from the UI; offline JSON/localStorage can still be edited.
 function bytesHex(arr){return [...arr].map(n=>n.toString(16).padStart(2,'0')).join('')}
@@ -578,7 +584,8 @@ async function switchPlayerName(name,code='',mode='login'){
  const key=invKey(name),existing=Object.prototype.hasOwnProperty.call(profile.accountsByName,key);
  if(!/^[A-Za-z0-9 _-]{3,16}$/.test(name)){showToast('Names need 3–16 letters, numbers, spaces, _ or -');return false}
  if(mode==='signup'){
-   if(existing||key==='britbox'){showToast('That pirate name already exists. Log in instead.');return false}
+   if(key==='britbox'){showToast('BRITBOX is reserved for the original owner. Choose another username.');return false}
+   if(existing){showToast('That pirate name already exists. Log in instead.');return false}
    if(key===SKY_ADMIN_NAME&&!await skyAdminCodeOK(code)){showToast('Reserved admin account: wrong invitation code');return false}
    if(code.length<6){showToast('Use a passcode with at least 6 characters');return false}
  }else{
@@ -600,10 +607,20 @@ async function switchPlayerName(name,code='',mode='login'){
    try{profile.loginCodes[key]=await deriveLoginCode(code);delete profile.localPins[key]}
    catch(err){showToast(err.message);return false}
  }else{
-   if(code.length<6){showToast('Use at least 6 characters for a new login code');return false}
-   try{profile.loginCodes[key]=await deriveLoginCode(code)}
-   catch(err){showToast(err.message);return false}
-   if(existing)showToast('Older local profile upgraded to a passcode. Keep it safe!');
+   if(key==='britbox'){
+     // No password reset by merely typing the reserved owner name.
+     // Owner-only migration: an older BRITBOX profile may prove its original admin PIN.
+     if(!hasProtectedOwner()||pinHash(code)!==profile.admin.ownerHash){
+       showToast('BRITBOX is reserved. Import your original owner backup and use its PIN.');return false;
+     }
+     try{profile.loginCodes[key]=await deriveLoginCode(code)}
+     catch(err){showToast(err.message);return false}
+   }else{
+     if(code.length<6){showToast('Use at least 6 characters for a new login code');return false}
+     try{profile.loginCodes[key]=await deriveLoginCode(code)}
+     catch(err){showToast(err.message);return false}
+     if(existing)showToast('Older local profile upgraded to a passcode. Keep it safe!');
+   }
  }
  // Only write out the previous player after successful validation.
  writeActiveInventory();writeActiveAccount();profile.name=name;
@@ -614,10 +631,10 @@ async function switchPlayerName(name,code='',mode='login'){
 }
 function updateLoginUI(){
  const ok=loggedInForInput(),key=invKey($('nameInput').value),exists=!!profile.accountsByName[key];
- $('accountStatus').textContent=ok?'✅ LOGGED IN: '+profile.name+((isOwnerTaggedName(profile.name)||invKey(profile.name)===SKY_ADMIN_NAME)?' • 🛡 LOCAL ADMIN':'')+' • Your profile is loaded':
+ $('accountStatus').textContent=ok?'✅ LOGGED IN: '+profile.name+((isOwnerTaggedName(profile.name)||(invKey(profile.name)===SKY_ADMIN_NAME&&delegatedNameMatches()))?' • 🛡 LOCAL ADMIN':'')+' • Your profile is loaded':
  exists?'🔒 '+$('nameInput').value+' • Enter login code to unlock (or set one for an older profile)':'✨ New pirate • Choose a 6+ character code and press LOG IN';
  $('logoutProfile').style.display=ok?'inline-block':'none';
- for(const id of ['playBtn','shopBtn','passBtn','redeemBtn','backupBtn'])$(id).disabled=!ok;
+ for(const id of ['shopBtn','passBtn','redeemBtn','backupBtn'])$(id).disabled=!ok;
  $('profileLoad').textContent=ok?'LOGGED IN':'LOG IN';
  $('leaderboardBtn').disabled=!ok;
  $('ownerBadge').style.display=ok&&isOwnerTaggedName(profile.name)?'inline-flex':'none';
@@ -646,10 +663,13 @@ function botPlayerName(idx){const seed=(idx*31+ISLANDS[islandId].seed*11)%names.
 function showToast(msg){$('toast').textContent=msg;$('toast').style.opacity='1';$('toast').style.transform='translateX(-50%) translateY(0)';toastUntil=performance.now()+2600}
 function formatTime(seconds){const s=Math.max(0,Math.floor(seconds));return Math.floor(s/60)+'m '+String(s%60).padStart(2,'0')+'s'}
 function smallTime(seconds){const s=Math.max(0,Math.ceil(seconds));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+// BRITBOX registration is locked and admin uses a verified local login session.
+// This only deters casual impersonation; standalone HTML is not a secure remote identity system.
 // The owner-only button checks this browser's configured owner name.
 // This is a local UI convenience, not secure identity verification or multiplayer access control.
 function currentAdminName(){return (state==='menu'?$('nameInput').value:profile.name).trim().replace(/[<>]/g,'').slice(0,16)||'Captain You'}
-function ownerNameMatches(){return !!(profile.admin.ownerHash&&profile.admin.ownerName&&currentAdminName().toLowerCase()===profile.admin.ownerName.toLowerCase())}
+function ownerNameMatches(){return hasProtectedOwner()&&signedInKey==='britbox'&&
+ invKey(profile.name)==='britbox'&&invKey(currentAdminName())==='britbox'}
 function delegatedNameMatches(){return profile.admin.delegates.some(d=>d.name.toLowerCase()===currentAdminName().toLowerCase())}
 function ownerRemembered(){
  if(!ownerNameMatches())return false;
@@ -970,9 +990,9 @@ $('passClaimAll').onclick=()=>{
 // This credential gate prevents casual in-game access in the same browser only.
 // All data belongs to the local HTML file; it is not server authentication.
 function pinHash(text){let h=2166136261;for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)}
-function openAdmin(){if((state!=='menu'&&state!=='playing')||signedInKey!==invKey(profile.name))return;closeLeaderboard();
+function openAdmin(){if(online.active)return;if((state!=='menu'&&state!=='playing')||signedInKey!==invKey(profile.name))return;closeLeaderboard();
  // Delegates still use the keyboard shortcut; only the actual owner sees a button.
- if(profile.admin.ownerHash&&!ownerNameMatches()&&!delegatedNameMatches())return;
+ if(!ownerNameMatches()&&!delegatedNameMatches())return;
  adminOrigin=state;
  const recognizedOwner=ownerRemembered();
  $('admin').style.display='flex';adminAuthenticated=recognizedOwner;adminRole=recognizedOwner?'owner':'';if(recognizedOwner)activeAdminSession=invKey(profile.name);$('adminPin').value='';
@@ -987,7 +1007,13 @@ $('ownerAdminButton').onclick=()=>{if(ownerNameMatches()||delegatedNameMatches()
 $('adminLogin').onclick=()=>{const pin=$('adminPin').value, h=pinHash(pin);
  if(pin.length<6){showToast('PIN needs at least 6 characters');return}
  if(!profile.admin.ownerHash&&delegatedNameMatches()){const match=profile.admin.delegates.some(d=>invKey(d.name)===invKey(currentAdminName())&&d.hash===h);if(!match){showToast('Wrong delegated admin PIN');return}adminRole='delegate'}
- else if(!profile.admin.ownerHash){if(invKey(currentAdminName())!=='britbox'){showToast('Only BRITBOX can initialize the owner PIN');return}profile.name=currentAdminName();profile.admin.ownerHash=h;profile.admin.ownerName=profile.name;save();adminRole='owner'}
+ else if(!profile.admin.ownerHash){
+   if(signedInKey!=='britbox'||invKey(profile.name)!=='britbox'||
+      !(profile.loginCodes?.britbox||profile.localPins?.britbox)){
+     showToast('Only a pre-existing, protected BRITBOX account can initialize owner admin.');return;
+   }
+   profile.admin.ownerHash=h;profile.admin.ownerName='BRITBOX';save();adminRole='owner';
+ }
  else if(ownerNameMatches()&&h===profile.admin.ownerHash){adminRole='owner'}
  else if(profile.admin.delegates.some(d=>d.name.toLowerCase()===currentAdminName().toLowerCase()&&d.hash===h)){adminRole='delegate'}
  else {showToast('Wrong PIN or name is not granted access');return}
@@ -1110,9 +1136,7 @@ function startRound(){
  state='playing';updateOwnerButton();document.body.classList.add('isPlaying');chargeInputs.clear();$('slashTouch').classList.remove('charging');elapsed=0;stormClock=0;kills=0;pending=null;coinCounter=0;aiCounter=0;chestCounter=0;flash='';flashT=0;boss=null;bossRespawned=false;bossSpawnAt=28+Math.random()*18;bossScheduled=((Number(profile.total?.rounds)||0)+1)%2===0;activeEvent=null;nextEventAt=60+Math.random()*28;eventRainTimer=0;activeTestRound=testIslandOverride!==null;islandId=activeTestRound?testIslandOverride:profile.currentIsland;generateTerrain();
  const spawnTheta=rnum(0,TAU),spawnRadius=Math.sqrt(Math.random())*1350;
  player=makeFighter(Math.cos(spawnTheta)*spawnRadius,Math.sin(spawnTheta)*spawnRadius);bots=[];coins=[];chests=[];particles=[];trailParticles=[];
- const MAX_MATCH_PLAYERS=100;
- const connectedHumanPlayers=1; // Offline build: local player only; online server will supply actual count.
- const nb=Math.max(0,MAX_MATCH_PLAYERS-connectedHumanPlayers);
+ const nb=ISLANDS[islandId].bots;
  for(let i=0;i<nb;i++){let a=rnum(0,TAU),r=rnum(540,1780);let bx=Math.cos(a)*r,by=Math.sin(a)*r;
  if(Math.hypot(bx-player.x,by-player.y)<310){const away=Math.atan2(by-player.y,bx-player.x);bx=clamp(player.x+Math.cos(away)*345,-MAP+70,MAP-70);by=clamp(player.y+Math.sin(away)*345,-MAP+70,MAP-70)}
  const b=makeFighter(bx,by,i);b.aiSeed=a;b.goal={x:clamp(b.x+Math.cos(a+.9)*rnum(220,650),-MAP+95,MAP-95),y:clamp(b.y+Math.sin(a+.9)*rnum(220,650),-MAP+95,MAP-95)};b.think=rnum(.5,2.5);b.idx=i;bots.push(b)}
@@ -1308,12 +1332,12 @@ function dashStepSpeed(f,dt){
 }
 // Tap to slash. A hold charges a directional dash; releasing unleashes the strike.
 // There is no independent instant dash: SPACE and SHIFT both operate the SAME charge move.
-function beginCharge(source){if(state!=='playing'||!player?.alive||player.attackCd>0||player.dashTimer>0)return;
+function beginCharge(source){if(online.active)return;if(state!=='playing'||!player?.alive||player.attackCd>0||player.dashTimer>0)return;
  if(chargeInputs.has(source))return;
  if(!chargeInputs.size){player.chargeActive=true;player.chargeTime=0;$('slashTouch').classList.add('charging')}
  chargeInputs.add(source);
 }
-function releaseCharge(source,cancel=false){if(!chargeInputs.has(source))return;chargeInputs.delete(source);if(chargeInputs.size)return;
+function releaseCharge(source,cancel=false){if(online.active)return;if(!chargeInputs.has(source))return;chargeInputs.delete(source);if(chargeInputs.size)return;
  $('slashTouch').classList.remove('charging');if(!player||!player.chargeActive)return;
  const held=player.chargeTime;player.chargeTime=0;player.chargeActive=false;
  if(cancel||state!=='playing'||!player.alive)return;
@@ -2040,7 +2064,7 @@ function tickLoggedInPlaytime(now){
   if($('leaderboard').style.display==='flex')renderLeaderboard();}
 }
 function loop(now){tickLoggedInPlaytime(now);const dt=Math.min(.033,Math.max(0,(now-lastTick)/1000));lastTick=now;frameTime=now*.001;
- refreshWorldStatus();if(state==='playing')update(dt);else if(state==='menu'){camera.x+=Math.sin(frameTime*.16)*dt*4;camera.y+=Math.cos(frameTime*.14)*dt*3}
+ refreshWorldStatus();if(state==='playing'&&!online.active)update(dt);else if(state==='menu'){camera.x+=Math.sin(frameTime*.16)*dt*4;camera.y+=Math.cos(frameTime*.14)*dt*3}
  if(now>toastUntil&&$('toast').style.opacity!=='0'){$('toast').style.opacity='0';$('toast').style.transform='translateX(-50%) translateY(-8px)'}
  render();requestAnimationFrame(loop)}
 
@@ -2252,9 +2276,49 @@ $('vaultAdminGift').onclick=()=>{
 };
 const originalRenderAdmin=renderAdmin;renderAdmin=function(){originalRenderAdmin();if(adminAuthenticated){$('adminVaultConfig').style.display=adminRole==='owner'?'block':'none';vaultAdminView()}};
 
+// ISLAND CLASH V30: multiplayer bridge INSIDE the original game closure.
+const online={active:false,ws:null,uid:'',owner:false,ready:false,previousIsland:islandId,latchedCharge:false};
+const style=document.createElement('style');style.textContent=`
+#onlineBtn{position:fixed;z-index:23;right:12px;top:12px;background:#06746b;color:white;border:2px solid #b6fff0;border-radius:12px;padding:12px 17px;font-weight:900;box-shadow:0 5px 14px #1438}
+#onlineLogin{position:fixed;z-index:45;inset:0;display:none;place-items:center;background:#102e25d9;font:bold 14px Trebuchet MS,Arial}
+#onlineCard{width:min(450px,95vw);max-height:90vh;overflow:auto;padding:22px;border:4px solid #3b916e;border-radius:19px;background:#f5fbe7;color:#173a2d;box-shadow:0 18px 80px #001a16}
+#onlineCard h2{margin:0 0 10px}#onlineCard label{display:block;margin:9px 0 4px}#onlineCard input{width:100%;padding:11px;border:1px solid #779f88;border-radius:9px;font:inherit}
+#onlineCard button,#onlineAdmin button{padding:10px;border-radius:9px;background:#1f7760;color:white;margin:5px 3px;border:0;font-weight:900}
+#onlineCard #onlineClose{background:#992a28}#onlineStatus{padding:10px;font-size:12px;min-height:30px}
+#onlineGameHud{position:fixed;z-index:26;left:50%;top:77px;transform:translateX(-50%);display:none;padding:8px 12px;background:#164d3dbb;color:white;border-radius:9px;font:bold 12px Trebuchet MS;pointer-events:none}
+#onlineExit{position:fixed;z-index:25;right:12px;bottom:12px;display:none;background:#9d2725;color:white;border-radius:9px;padding:10px;border:0;font-weight:900}
+#onlineAdmin{position:fixed;z-index:27;left:12px;bottom:12px;display:none;padding:9px;background:#1d4a3add;color:white;border-radius:11px;max-width:305px}
+`;document.head.append(style);
+const loginLayer=document.createElement('div');loginLayer.id='onlineLogin';loginLayer.innerHTML=`<div id="onlineCard"><h2>🌐 ISLAND CLASH MULTIPLAYER</h2><p>Sign in to the server (separate from old offline accounts).</p><label>NAME</label><input id="onlineName" maxlength="16" autocomplete="username" placeholder="Pirate name"><label>NEW PASSCODE</label><input id="onlinePass" type="password" autocomplete="current-password" placeholder="8+ characters"><label>BRITBOX SETUP SECRET (first signup only)</label><input id="onlineOwnerSecret" type="password" autocomplete="off" placeholder="Only the owner needs this"><div><button id="onlineSignIn">LOG IN</button><button id="onlineSignUp">SIGN UP</button><button id="onlineClose">CLOSE</button></div><div id="onlineStatus">Connect to the server to play.</div></div>`;document.body.append(loginLayer);
+const onlineButton=document.createElement('button');onlineButton.id='onlineBtn';onlineButton.textContent='🌐 PLAY ONLINE';onlineButton.style.display='none';document.body.append(onlineButton);$('playBtn').textContent='PLAY ONLINE';$('playBtn').onclick=()=>onlineButton.click();
+const onlineHud=document.createElement('div');onlineHud.id='onlineGameHud';document.body.append(onlineHud);
+const onlineExit=document.createElement('button');onlineExit.id='onlineExit';onlineExit.textContent='EXIT ONLINE';document.body.append(onlineExit);
+const onlineAdmin=document.createElement('div');onlineAdmin.id='onlineAdmin';onlineAdmin.innerHTML=`<b>🛡 SERVER OWNER</b><div><button data-command="boss">SPAWN BOSS</button><button data-command="gold">+1000 GOLD</button><button data-command="event">GOLD RUSH</button><button data-command="island">NEXT ISLAND</button></div>`;document.body.append(onlineAdmin);
+function onlineMessage(s){$('onlineStatus').textContent=s}
+function onlineSend(o){if(online.ws?.readyState===WebSocket.OPEN)online.ws.send(JSON.stringify(o))}
+function onlineStop(){online.active=false;online.ready=false;online.owner=false;online.uid='';online.ws?.close();online.ws=null;loginLayer.style.display='none';onlineHud.style.display='none';onlineExit.style.display='none';onlineAdmin.style.display='none';$('authDock').style.display='';onlineButton.style.display='';$('menu').style.display='flex';state='menu';document.body.classList.remove('isPlaying');islandId=online.previousIsland;player=null;boss=null;bots=[];coins=[];chests=[];initStorm();generateTerrain();refreshMenu()}
+onlineButton.onclick=()=>{loginLayer.style.display='grid';$('onlineName').value=profile.name||'';onlineMessage('Choose LOG IN or SIGN UP.');const protocol=location.protocol==='https:'?'wss:':'ws:';online.ws?.close();const ws=new WebSocket(protocol+'//'+location.host+'/ws');online.ws=ws;ws.onopen=()=>onlineMessage('Connected. Sign in or make a new account.');ws.onclose=()=>{if(online.ws!==ws)return;onlineMessage('Disconnected. Reopen multiplayer to reconnect.');if(online.active)onlineStop()};ws.onerror=()=>onlineMessage('Could not connect. Check Render → Deploys / Logs.');ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}
+ if(m.type==='error'){onlineMessage(m.message);return}
+ if(m.type==='authenticated'){online.active=true;online.ready=true;online.uid=m.id;online.owner=!!m.owner;online.previousIsland=islandId;loginLayer.style.display='none';onlineButton.style.display='none';$('menu').style.display='none';$('results').style.display='none';$('pause').style.display='none';state='playing';document.body.classList.add('isPlaying');onlineHud.style.display='block';onlineExit.style.display='block';$('authDock').style.display='none';onlineAdmin.style.display=online.owner?'block':'none';onlineHud.textContent='Connecting to the shared arena...';return}
+ if(m.type==='state'&&online.active){islandId=Number(m.island)||0;if(online.mapIsland!==islandId){online.mapIsland=islandId;generateTerrain()}elapsed=m.elapsed;kills=0;storm={...m.storm,seeds:[{x:0,y:0,r:1850}]};activeEvent=m.event;coins=m.coins.map(c=>({...c,gone:false}));chests=m.chests.map(c=>({...c,shine:0,bossChest:false}));let local=m.players.find(p=>p.id===online.uid);if(!local)return;
+ function adapt(p,friend){const skin=SKINS.find(s=>s.id===p.skin)||SKINS[0];return {...p,friend,scale:p.size||1,r:21,color:skin.color,botSkin:p.skin,botPet:p.pet,loot:p.loot||0,attackAnim:p.attackAnim||0,attackAnimLen:p.attackAnimLen||.28,attackSide:p.attackSide||1,swordSide:p.swordSide||1,chargeActive:false,chargeTime:0,blueBlade:p.blueBlade||0,hurtTimer:p.hurtTimer||0,aiTarget:null,buffs:{}}}
+ player=adapt(local,true);bots=m.players.filter(p=>p.id!==online.uid).map(p=>adapt(p,false));kills=player.kills;boss=m.boss?{...adapt(m.boss,false),bossSpec:WORLD_BOSSES[bossTier()],bossWindup:0,bossPulse:0}:null;camera.x=player.x;camera.y=player.y;camera.zoom=clamp(1.03/(player.scale**.22),.68,1);onlineHud.textContent=`🌐 ${m.humans} players + ${m.bots} bots • Round ${m.round} • ${ISLANDS[islandId].name} • ${Math.ceil(m.elapsed)}s`;return}
+ if(m.type==='kill'||m.type==='boss_spawn'||m.type==='boss_defeated'||m.type==='notice')showToast(m.message||m.name||'Pirate defeated!');
+ };
+};
+$('onlineClose').onclick=()=>{loginLayer.style.display='none';online.ws?.close();online.ws=null};
+$('onlineSignIn').onclick=()=>onlineSend({type:'login',name:$('onlineName').value,password:$('onlinePass').value});
+$('onlineSignUp').onclick=()=>onlineSend({type:'signup',name:$('onlineName').value,password:$('onlinePass').value,ownerSecret:$('onlineOwnerSecret').value});
+onlineExit.onclick=onlineStop;
+for(const b of onlineAdmin.querySelectorAll('[data-command]'))b.onclick=()=>{const action=b.dataset.command;onlineSend({type:'admin',action,value:action==='event'?'gold':action==='island'?(islandId+1)%10:null})};
+let onlineCharge=false;function onlineChargeStart(){if(!online.active||onlineCharge)return;onlineCharge=true;onlineSend({type:'input',x:0,y:0,charge:true})}function onlineChargeEnd(){if(!online.active||!onlineCharge)return;onlineCharge=false;onlineSend({type:'input',x:0,y:0,charge:false})}
+addEventListener('keydown',e=>{if(!online.active||e.target instanceof HTMLInputElement)return;if((e.code==='Space'||e.code.startsWith('Shift'))&&!e.repeat)onlineChargeStart()});
+addEventListener('keyup',e=>{if(!online.active)return;if(e.code==='Space'||e.code.startsWith('Shift'))onlineChargeEnd()});
+$('slashTouch').addEventListener('pointerdown',onlineChargeStart);$('slashTouch').addEventListener('pointerup',onlineChargeEnd);$('slashTouch').addEventListener('pointercancel',onlineChargeEnd);
+setInterval(()=>{if(!online.active||!online.ready)return;let input=motionInput();onlineSend({type:'input',x:input.x,y:input.y})},50);
+
 refreshMenu();$('authName').value=profile.name;setAuthMode('login');showAccountDock(true);generateTerrain();camera.x=0;camera.y=0;camera.zoom=.9;requestAnimationFrame(loop);
 })();
 </script>
-<script src="/online.js"></script>
 </body>
 </html>
