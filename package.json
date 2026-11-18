@@ -1,1 +1,7 @@
-{"name":"island-clash-v30","version":"1.0.0","private":true,"scripts":{"start":"node server.js"},"dependencies":{"express":"^4.21.2","ws":"^8.18.0"}}
+{
+  "name":"island-clash-admin-only",
+  "version":"31.0.0",
+  "private":true,
+  "scripts":{"start":"node server.js"},
+  "dependencies":{"express":"^4.21.2","ws":"^8.18.0"}
+}
