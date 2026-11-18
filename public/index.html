@@ -2292,6 +2292,72 @@ function enableOnlineMode() {
   ...ISLANDS.map((island,index)=>({asset:'island',item:String(index),label:'Unlock '+island.name})),
   ...assetGroups.flatMap(([asset,items])=>items.filter(item=>!item.adminOnly).map(item=>({asset,item:item.id,label:item.name})))
  ];
+ const backupField=document.createElement('label');
+ backupField.htmlFor='legacySignupBackup';
+ backupField.textContent='Optional v31 backup (imports the pirate active when exported)';
+ const backupInput=document.createElement('input');
+ backupInput.id='legacySignupBackup';
+ backupInput.type='file';
+ backupInput.accept='.json,application/json';
+ backupField.append(backupInput);
+ $('authConfirmWrap').append(backupField);
+
+ async function readLegacyBackup(file){
+  if(file.size>2*1024*1024)throw new Error('The v31 backup exceeds 2 MB.');
+  let backup;
+  try{backup=JSON.parse(await file.text())}catch{throw new Error('Choose a valid Island Clash backup file.')}
+  const saved=backup?.data;
+  if(!['island-clash-local-backup-v9','island-clash-local-backup-v12'].includes(backup?.format)||
+    typeof saved?.name!=='string')throw new Error('Choose an Island Clash v31 backup.');
+  const key=saved.name.trim().toLowerCase().replace(/[<>]/g,'').slice(0,16);
+  if(!Object.hasOwn(saved.accountsByName||{},key)||!Object.hasOwn(saved.inventoryByName||{},key)){
+   throw new Error('This backup is missing the active pirate.');
+  }
+  const oldAccount=saved.accountsByName[key],oldInventory=saved.inventoryByName[key];
+  if(!oldAccount||typeof oldAccount!=='object'||!oldInventory||typeof oldInventory!=='object'){
+   throw new Error('This backup has an invalid pirate profile.');
+  }
+
+  // Solo progress is portable. Credentials, privileges, and shared rewards stay server-side.
+  const account=newAccount(),inventory=newInventory();
+  const number=value=>typeof value==='number'&&Number.isFinite(value)?clamp(value,0,Number.MAX_SAFE_INTEGER):0;
+  const integer=value=>Math.floor(number(value));
+  const array=value=>Array.isArray(value)?value:[];
+  for(const field of ['chestsOpened','basicTokens','playtimeSec','battleXP','wins'])account[field]=number(oldAccount[field]);
+  account.currentIsland=Math.min(ISLANDS.length-1,integer(oldAccount.currentIsland));
+  account.unlocked=Math.max(account.currentIsland,Math.min(ISLANDS.length-1,integer(oldAccount.unlocked)));
+  account.proPass=oldAccount.proPass===true;
+  for(const field of ['passClaimedFree','passClaimedPro']){
+   account[field]=[...new Set(array(oldAccount[field]).filter(tier=>Number.isInteger(tier)&&tier>=1&&tier<=PASS_TIERS))];
+  }
+  for(const field of ['islandWins','islandKos'])account[field]=ISLANDS.map((_,index)=>integer(oldAccount[field]?.[index]));
+  for(const field of ['last','best','total']){
+   for(const metric of Object.keys(account[field]))account[field][metric]=number(oldAccount[field]?.[metric]);
+  }
+  account.achievementTags=ACHIEVEMENTS.filter(tag=>array(oldAccount.achievementTags).includes(tag.id)).map(tag=>tag.id);
+  if(account.achievementTags.includes(oldAccount.equippedTag))account.equippedTag=oldAccount.equippedTag;
+  account.personalChestCodes=array(oldAccount.personalChestCodes).filter(entry=>
+   typeof entry?.code==='string'&&/^P[A-Z0-9]{1,7}$/.test(entry.code)
+  ).slice(0,200).map(entry=>({code:entry.code,reward:Math.min(1000,integer(entry.reward)),used:entry.used===true}));
+
+  inventory.bank=number(oldInventory.bank);
+  for(const [asset,items,field,fallback] of assetGroups){
+   inventory[field]=items.filter(item=>!item.adminOnly&&(item.id===fallback||array(oldInventory[field]).includes(item.id))).map(item=>item.id);
+   if(inventory[field].includes(oldInventory[asset]))inventory[asset]=oldInventory[asset];
+  }
+  for(const [asset,field,owned] of [['skin','skinUpgrades','ownedSkins'],['pet','petUpgrades','ownedPets']]){
+   for(const item of inventory[owned]){
+    const stats=oldInventory[field]?.[item];
+    if(stats&&typeof stats==='object'){
+     const keys=asset==='skin'?['power','speed','health','reach']:['power','speed','magnet','health'];
+     inventory[field][item]=Object.fromEntries(keys.filter(stat=>Object.hasOwn(stats,stat))
+      .map(stat=>[stat,Math.min(maxUpgradeLevel,integer(stats[stat]))]));
+    }
+   }
+  }
+  return {account,inventory};
+ }
+
  const admin=window.mountIslandAdmin($('admin'),request,assets,MATCH_EVENTS);
  let globalState={},seenNotice,seenEvent,lastEventRound,refreshing=false;
  let identityChange=false,accountRefresh=Promise.resolve();
@@ -2452,7 +2518,10 @@ function enableOnlineMode() {
   identityChange=true;
   $('authSubmit').disabled=true;
   try{
-   const user=await online.signIn(authMode,{username,password});
+   const mode=authMode;
+   const file=mode==='signup'?backupInput.files[0]:null;
+   const imported=file?await readLegacyBackup(file):null;
+   const user=await online.signIn(mode,{username,password});
    onlineUser=user;
    profile.name=user.username;
    signedInKey=invKey(user.username);
@@ -2461,13 +2530,23 @@ function enableOnlineMode() {
    applyInventory(user.username);
    $('nameInput').value=user.username;
    await loadCloudSave();
+   if(imported&&cloudRevision===0){
+    imported.account.displayName=user.username;
+    profile.accountsByName[signedInKey]=imported.account;
+    profile.inventoryByName[signedInKey]=imported.inventory;
+    applyAccount(user.username);
+    applyInventory(user.username);
+    save();
+   }
    await syncAccount();
+   if(imported)await uploadCloudSave();
+   backupInput.value='';
    generateTerrain();
    camera.zoom=.9;
    $('authCode').value='';
    $('authConfirm').value='';
    showAccountDock(false);
-   showToast('Signed in as '+user.username);
+   showToast(imported&&cloudRevision>0?'Solo backup imported for '+user.username:'Signed in as '+user.username);
    maybeShowUpdateNotes();
   }catch(error){
    if(onlineUser){await online.signOut().catch(()=>{});signOutLocally()}
