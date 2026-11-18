@@ -10,7 +10,7 @@ The v32 server adds online accounts and shared administration to the original so
 - Redeem codes with expiration, a per-account limit, a total limit, and permanent disabling. One shared vault prize can be open at a time. The owner receives a single-use code to distribute.
 - Global events and shutdown controls polled every 10 seconds. An enabled event starts once per solo round and runs for its original duration. Shutdown pauses standard players' solo rounds.
 - Optional v31 backup import at v32 signup. It imports the active pirate’s solo progress, shop inventory, and personal chest codes.
-- A cloud save for solo progression and shop inventory, separate from centrally granted items and code claims. Saves sync every 45 seconds and on logout. A conflicting write prompts the player to log in again and load the newer cloud save.
+- A cloud save for solo progression and shop inventory, separate from centrally granted items and code claims. Saves sync every 45 seconds, on logout, and when the page is hidden. Use Save online now to verify a manual sync before switching devices. A conflicting write prompts the player to log in again and load the newer cloud save.
 
 ## Database
 

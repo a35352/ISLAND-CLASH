@@ -171,6 +171,13 @@ window.mountIslandAdmin = function mountIslandAdmin(
       button.disabled = false;
     }
   }
+  let accountPrefix;
+  async function findAccounts(prefix) {
+    const { users } = await request('admin/users?q=' + encodeURIComponent(prefix));
+    accountPrefix = prefix;
+    list('onlineAccounts', users, (row) => row.username + ' · ' + row.role);
+  }
+
   body.addEventListener('submit', (event) => {
     event.preventDefault();
     const form = event.target;
@@ -181,17 +188,9 @@ window.mountIslandAdmin = function mountIslandAdmin(
     const qty = Number(fields.qty);
     run(button, async () => {
       switch (form.dataset.action) {
-        case 'search': {
-          const { users } = await request(
-            'admin/users?q=' + encodeURIComponent(fields.username.trim()),
-          );
-          list(
-            'onlineAccounts',
-            users,
-            (row) => row.username + ' · ' + row.role,
-          );
+        case 'search':
+          await findAccounts(fields.username.trim());
           break;
-        }
         case 'notice':
           await request('admin/notices', { message: fields.message });
           form.reset();
@@ -199,6 +198,7 @@ window.mountIslandAdmin = function mountIslandAdmin(
           break;
         case 'role':
           await request('admin/role', fields);
+          if (accountPrefix !== undefined) await findAccounts(accountPrefix);
           break;
         case 'invite': {
           const { code } = await request('admin/invitations', fields);

@@ -2362,6 +2362,20 @@ function enableOnlineMode() {
  let globalState={},seenNotice,seenEvent,lastEventRound,refreshing=false;
  let identityChange=false,accountRefresh=Promise.resolve();
  let cloudRevision=0,cloudConflict=false,lastCloudData='',cloudUpload=null;
+ const syncStatus=document.createElement('p');
+ syncStatus.className='smallNote';
+ syncStatus.setAttribute('role','status');
+ const syncButton=document.createElement('button');
+ syncButton.type='button';
+ syncButton.className='vaultAction';
+ syncButton.textContent='Save online now';
+ syncStatus.hidden=syncButton.hidden=true;
+ $('accountStatus').after(syncStatus,syncButton);
+ syncButton.onclick=async()=>{
+  if(identityChange||!onlineUser)return;
+  await accountRefresh.catch(()=>{});
+  await uploadCloudSave();
+ };
  const messages={
   bulletin:'Announcements from the Island Clash team.',
   bug:'Describe the issue and what you were doing before it happened.',
@@ -2392,6 +2406,8 @@ function enableOnlineMode() {
   localLoginUI();
   $('accountStatus').textContent=onlineUser?'Signed in as '+onlineUser.username:'Log in to your online account to play.';
   if(onlineUser&&cloudConflict)$('accountStatus').textContent+=' · Another session saved first. Sign in again to load that save.';
+  syncStatus.hidden=syncButton.hidden=!onlineUser;
+  syncButton.disabled=identityChange||!!cloudUpload||cloudConflict;
   $('playBtn').disabled=!onlineUser||shutdownBlocksPlayer();
  };
  updateOwnerButton=()=>{
@@ -2459,6 +2475,7 @@ function enableOnlineMode() {
   const {save:cloud}=await request('solo-save');
   cloudRevision=cloud?.revision||0;
   cloudConflict=false;
+  syncStatus.textContent=cloud?'Cloud save loaded.':'Cloud save ready.';
   lastCloudData=cloud?JSON.stringify(cloud.data):'';
   profile.onlineInventory ||= {};
   profile.onlineSaveRevisions ||= {};
@@ -2473,23 +2490,35 @@ function enableOnlineMode() {
   }
   profile.onlineSaveRevisions[onlineUser.id]=cloudRevision;
  }
- function uploadCloudSave(){
-  if(cloudUpload)return cloudUpload;
-  if(!onlineUser||cloudConflict)return Promise.resolve();
-  const userId=onlineUser.id;
-  const data={account:captureAccount(),inventory:captureInventory(),grants:profile.onlineInventory?.[userId]||{}};
+ async function uploadCloudSave(){
+  const user=onlineUser;
+  if(!user||cloudConflict)return;
+  if(cloudUpload)await cloudUpload;
+  if(onlineUser?.id!==user.id||cloudConflict)return;
+  // A save may have started while this caller was waiting. Queue behind it.
+  if(cloudUpload)return uploadCloudSave();
+  const data={account:captureAccount(),inventory:captureInventory(),grants:profile.onlineInventory?.[user.id]||{}};
   const serialized=JSON.stringify(data);
-  if(serialized===lastCloudData)return Promise.resolve();
+  if(serialized===lastCloudData)return;
+  save();
+  syncStatus.textContent='Saving online…';
   cloudUpload=request('solo-save',{revision:cloudRevision,data}).then(result=>{
+   if(onlineUser?.id!==user.id)return;
    cloudRevision=result.revision;
    lastCloudData=serialized;
-   profile.onlineSaveRevisions[userId]=cloudRevision;
+   profile.onlineSaveRevisions[user.id]=cloudRevision;
    save();
+   syncStatus.textContent='Cloud saved at '+new Date().toLocaleTimeString();
   }).catch(error=>{
-   if(error.status===409){cloudConflict=true;updateLoginUI()}
-   showToast(error.message);
-  }).finally(()=>{cloudUpload=null});
-  return cloudUpload;
+   if(onlineUser?.id!==user.id)return;
+   cloudConflict=error.status===409;
+   syncStatus.textContent=cloudConflict?error.message:'Saved on this device. Cloud save failed. Try again.';
+  }).finally(()=>{
+   cloudUpload=null;
+   updateLoginUI();
+  });
+  updateLoginUI();
+  await cloudUpload;
  }
 
  function signOutLocally(){
@@ -2554,11 +2583,13 @@ function enableOnlineMode() {
   }finally{
    identityChange=false;
    $('authSubmit').disabled=!!onlineUser;
+   updateLoginUI();
   }
  };
  $('authLogout').onclick=$('logoutProfile').onclick=async()=>{
   if(state!=='menu'||identityChange)return;
   identityChange=true;
+  updateLoginUI();
   try{
    await accountRefresh.catch(()=>{});
    await uploadCloudSave();
@@ -2699,7 +2730,13 @@ function enableOnlineMode() {
  setAuthMode('login');
  void poll();
  setInterval(poll,10000);
- setInterval(()=>{if(!identityChange)void uploadCloudSave()},45000);
+ setInterval(()=>{if(!identityChange&&!cloudUpload)void uploadCloudSave()},45000);
+ document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'&&!identityChange&&onlineUser){
+   save();
+   if(!cloudUpload)void uploadCloudSave();
+  }
+ });
 }
 
 if(onlineMode)enableOnlineMode();
