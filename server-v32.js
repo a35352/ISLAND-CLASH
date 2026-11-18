@@ -9,13 +9,26 @@ const { promisify } = require('node:util');
 const { readFileSync } = require('node:fs');
 const tls = require('node:tls');
 const scrypt = promisify(crypto.scrypt);
-if (!process.env.DATABASE_URL) {
+let connection = process.env.DATABASE_URL?.trim();
+if (!connection) {
   console.error('DATABASE_URL is missing; add it in Render Environment.');
   process.exit(1);
 }
 let databaseUrl;
 try {
-  databaseUrl = new URL(process.env.DATABASE_URL);
+  if (/^postgres(?:ql)?:\/\/[^:@/]+:\[YOUR-PASSWORD\]@/i.test(connection)) {
+    const password = process.env.DATABASE_PASSWORD;
+    if (!password) {
+      console.error('DATABASE_PASSWORD is required when DATABASE_URL contains [YOUR-PASSWORD].');
+      process.exit(1);
+    }
+    connection = connection.replace(/:\[YOUR-PASSWORD\]@/i, () =>
+      ':' + encodeURIComponent(password) + '@');
+  }
+  databaseUrl = new URL(connection);
+  if (!['postgres:', 'postgresql:'].includes(databaseUrl.protocol) || !databaseUrl.hostname) {
+    throw new Error('Invalid database URL');
+  }
 } catch {
   console.error('DATABASE_URL must be a valid PostgreSQL connection URL.');
   process.exit(1);
