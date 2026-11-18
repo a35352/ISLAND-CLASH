@@ -1,42 +1,59 @@
-
 'use strict';
-const express=require('express'),http=require('http'),{WebSocketServer,WebSocket}=require('ws'),crypto=require('crypto');
-const app=express();app.use(express.static('public'));app.get('/health',(req,res)=>res.json({ok:true,players:humans.size,bots:bots.length}));
-const server=http.createServer(app),wss=new WebSocketServer({server,path:'/ws'});
-const OWNER_NAME='BRITBOX';
-const ownerSecret=String(process.env.BRITBOX_OWNER_SECRET||'');
-function verifyOwner(candidate){if(!ownerSecret||ownerSecret.length<12)return false;const a=crypto.createHash('sha256').update(String(candidate||'')).digest();const b=crypto.createHash('sha256').update(ownerSecret).digest();return crypto.timingSafeEqual(a,b);}
-const MAX=100,MAP=1850,TICK=50,humans=new Map(),bots=[];let coins=[],storm={x:0,y:0,r:1700},round=1,elapsed=0,worldTime=Date.now(),events=[];
-const rand=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const names=['Coral','Captain','Dagger','Reef','Skull','Kraken','Sailor','Storm','Anchor','Pearl','Shark','Rogue','Cannon','Drift','Tide'];
-function fighter(id,name,bot=false){let a=rand(0,Math.PI*2),r=rand(150,1300);return{id,name,bot,x:Math.cos(a)*r,y:Math.sin(a)*r,angle:rand(-3.14,3.14),hp:100,maxhp:100,size:19,kills:0,gold:0,alive:true,attack:0,dash:0,vx:0,vy:0,skin:'classic',pet:'none',moveX:0,moveY:0,charging:false,chargeStart:0,respawnAt:0};}
-function fill(){while(humans.size+bots.length<MAX){let i=crypto.randomUUID();bots.push(fighter(i,names[Math.floor(rand(0,names.length))]+'_'+Math.floor(rand(100,999)),true));}while(humans.size+bots.length>MAX)bots.pop();}
-function makeCoins(){coins=Array.from({length:350},(_,i)=>({id:i,x:rand(-MAP+60,MAP-60),y:rand(-MAP+60,MAP-60),value:Math.floor(rand(1,6))}));}
-function broadcast(obj){let s=JSON.stringify(obj);for(let c of wss.clients)if(c.readyState===WebSocket.OPEN)c.send(s);}
-function reset(){round++;elapsed=0;storm={x:0,y:0,r:1700};for(let p of [...humans.values(),...bots]){Object.assign(p,fighter(p.id,p.name,p.bot),{skin:p.skin,pet:p.pet});}makeCoins();broadcast({type:'round',round});}
-function attack(p,charged){if(!p.alive||p.attack>0)return;p.attack=charged?0.75:0.38;let reach=charged?125:85,damage=charged?46:25;
- for(let t of [...humans.values(),...bots]){if(t.id===p.id||!t.alive)continue;let dx=t.x-p.x,dy=t.y-p.y,d=Math.hypot(dx,dy),ang=Math.atan2(dy,dx);if(d<reach+t.size&&Math.cos(ang-p.angle)>.25){t.hp-=damage;t.x=clamp(t.x+dx/(d||1)*24,-MAP,MAP);t.y=clamp(t.y+dy/(d||1)*24,-MAP,MAP);if(t.hp<=0){t.alive=false;t.respawnAt=elapsed+5;p.kills++;p.gold+=t.gold+15;p.size=Math.min(44,p.size+1.1);broadcast({type:'kill',by:p.name,victim:t.name});}}}
- if(charged)p.dash=.23;
+// Island Clash v30 multiplayer server. Keep OWNER_SETUP_SECRET private in Render.
+const express=require('express'),http=require('http'),crypto=require('crypto'),fs=require('fs'),path=require('path');
+const {WebSocketServer,WebSocket}=require('ws');
+const app=express();app.use(express.static(path.join(__dirname,'public')));const server=http.createServer(app),wss=new WebSocketServer({server,path:'/ws'});
+const MAX=100,MAP=1900,STEP=.05,SKINS=['classic','scarlet','emerald','gold','shadow','frost','seafoam','obsidian','inferno','tidalking','jungle','islandhero','proazure','procrimson','proabyss','prodivine','crystal','moon','relic','specter','crown','barnacle','reefblade','royal','void','nova'],PETS=['none','crab','parrot','turtle','ghost','dragon','fox','phoenix','jelly','raven','shark','wisp','leviathan','lobster','owl','whale','starfish','seahorse','goldfinch','stardrake','manta','celestial'];
+const ISLANDS=[['PALM COVE',230],['CORAL GROVE',248],['ANCIENT ATOLL',266],['EMBER REEF',284],['STORM CITADEL',300],['CRYSTAL SHOALS',316],['MOONLIGHT BAY',328],['SUNKEN EMPIRE',340],['PHANTOM DEPTHS',352],['CROWN OF TIDES',365]];
+const DB=process.env.ACCOUNTS_FILE||path.join(__dirname,'accounts.json');let accounts={};try{accounts=JSON.parse(fs.readFileSync(DB,'utf8'))}catch{};
+function saveAccounts(){try{fs.writeFileSync(DB,JSON.stringify(accounts))}catch(e){console.error('Account save failed: configure persistent disk',e.message)}}
+const rand=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.min(b,Math.max(a,v)),id=()=>crypto.randomUUID();
+function hashPassword(password,salt){return crypto.scryptSync(password,salt,64).toString('hex')}
+function equalHex(a,b){try{const aa=Buffer.from(a,'hex'),bb=Buffer.from(b,'hex');return aa.length===bb.length&&crypto.timingSafeEqual(aa,bb)}catch{return false}}
+function safeName(s){s=String(s||'').trim();return /^[a-zA-Z0-9_]{3,16}$/.test(s)?s:null}
+function token(){return crypto.randomBytes(24).toString('hex')}
+const sessions=new Map(),humans=new Map(),bots=new Map();let round=1,island=0,elapsed=0,coins=[],chests=[],boss=null,event=null,storm={x:0,y:0,r:1850,phase:'prepare',seconds:12};let nextCoinId=1;
+function spawnPos(){const a=rand(0,Math.PI*2),r=Math.sqrt(Math.random())*1350;return{x:Math.cos(a)*r,y:Math.sin(a)*r}}
+function fighter(uid,name,bot=false){return {id:uid,name,bot,...spawnPos(),vx:0,vy:0,angle:rand(-3.14,3.14),hp:175,maxhp:175,size:1,loot:0,kills:0,alive:true,attackAnim:0,attackAnimLen:.28,attackSide:1,swordSide:1,dashTimer:0,chargeActive:false,chargeTime:0,blueBlade:0,hurtTimer:0,skin:'classic',pet:'none',moveX:0,moveY:0,cd:0,chargeAt:0,charging:false,respawn:0,aiAngle:rand(-3.14,3.14),aiClock:0}}
+function newBot(){const labels=['Coral','Kraken','Reef','Storm','Anchor','Shadow','Pearl','Shark','Captain','Rogue','Cannon','Tide','Skull','Flint'];let b=fighter(id(),labels[Math.floor(rand(0,labels.length))]+'_'+Math.floor(rand(100,999)),true);b.skin=SKINS[Math.floor(rand(0,Math.min(23,6+island*2)))];b.pet=Math.random()<.5?PETS[Math.floor(rand(0,Math.min(16,4+island)))]: 'none';return b}
+function refill(){while(humans.size+bots.size<MAX){let b=newBot();bots.set(b.id,b)}while(humans.size+bots.size>MAX){let k=bots.keys().next().value;if(!k)break;bots.delete(k)}}
+function all(){return [...humans.values(),...bots.values()]}
+function emit(type,extra={}){const message=JSON.stringify({type,...extra});for(const ws of wss.clients)if(ws.readyState===WebSocket.OPEN)ws.send(message)}
+function spawnCoin(x,y,value=1){if(coins.length>=750)return;coins.push({id:nextCoinId++,x:clamp(x,-MAP,MAP),y:clamp(y,-MAP,MAP),value,twinkle:rand(0,6.28)})}
+function setupLoot(){coins=[];chests=[];for(let i=0;i<480;i++)spawnCoin(rand(-MAP+70,MAP-70),rand(-MAP+70,MAP-70),Math.floor(rand(2,8)));for(let i=0;i<25;i++)chests.push({id:id(),x:rand(-MAP+100,MAP-100),y:rand(-MAP+100,MAP-100),opened:false})}
+function startRound(){round++;island=(island+1)%ISLANDS.length;elapsed=0;storm={x:0,y:0,r:1850,phase:'prepare',seconds:12};boss=null;event=null;for(let p of all()){const fresh=fighter(p.id,p.name,p.bot);const keep={skin:p.skin,pet:p.pet};Object.assign(p,fresh,keep)}setupLoot();emit('round',{round,island})}
+function hurt(p,damage,by){if(!p.alive)return;p.hp=Math.max(0,p.hp-damage);p.hurtTimer=.15;if(p.hp<=0){p.alive=false;p.respawn=elapsed+4;if(by&&by!==p){by.kills++;by.loot+=Math.floor(p.loot*.5)+15;by.size=Math.min(2.5,by.size+.07)}for(let i=0;i<Math.min(12,Math.floor(p.loot/12));i++)spawnCoin(p.x+rand(-50,50),p.y+rand(-50,50),10);emit('kill',{by:by?.name||'Storm',victim:p.name})}}
+function hit(p,charged){if(!p.alive||p.cd>0)return;const reach=charged?126:92,damage=charged?53:28;p.cd=charged?.68:.43;p.attackAnim=charged?.44:.27;p.attackAnimLen=p.attackAnim;p.attackSide=p.swordSide;p.swordSide*=-1;if(charged){p.dashTimer=.22;p.blueBlade=.4}
+ for(const t of all()){if(!t.alive||t.id===p.id)continue;let dx=t.x-p.x,dy=t.y-p.y,d=Math.hypot(dx,dy)||1;if(d<reach+22*t.size&&Math.cos(Math.atan2(dy,dx)-p.angle)>.14){t.x=clamp(t.x+dx/d*19,-MAP,MAP);t.y=clamp(t.y+dy/d*19,-MAP,MAP);hurt(t,damage,p)}}
+ if(boss?.alive){const dx=boss.x-p.x,dy=boss.y-p.y,d=Math.hypot(dx,dy);if(d<reach+65&&Math.cos(Math.atan2(dy,dx)-p.angle)>.03){boss.hp-=damage; if(boss.hp<=0){boss.alive=false;for(let i=0;i<55;i++)spawnCoin(boss.x+rand(-140,140),boss.y+rand(-140,140),30);emit('boss_defeated',{by:p.name})}}}
 }
-function update(dt){elapsed+=dt;storm.r=Math.max(125,1700-elapsed*6.3);let all=[...humans.values(),...bots];
- for(let p of all){if(!p.alive){if(elapsed>p.respawnAt){let n=fighter(p.id,p.name,p.bot);Object.assign(p,n,{skin:p.skin,pet:p.pet});}continue;}
- p.attack=Math.max(0,p.attack-dt);p.dash=Math.max(0,p.dash-dt);
- if(p.bot){let nearest=null,dist=1e10;for(let t of all){if(t===p||!t.alive)continue;let d=Math.hypot(t.x-p.x,t.y-p.y);if(d<dist){dist=d;nearest=t;}}
- if(nearest&&dist<550){let a=Math.atan2(nearest.y-p.y,nearest.x-p.x);p.angle=a;p.moveX=Math.cos(a);p.moveY=Math.sin(a);if(dist<75&&p.attack<=0&&Math.random()<.09)attack(p,false);}
- else{if(!p.wander||Math.random()<.012)p.wander=rand(-Math.PI,Math.PI);p.angle=p.wander;p.moveX=Math.cos(p.angle)*.55;p.moveY=Math.sin(p.angle)*.55;}}
- let speed=p.dash>0?650:p.bot?170:220,mag=Math.hypot(p.moveX,p.moveY);p.x=clamp(p.x+(mag>0?p.moveX/mag:0)*speed*dt,-MAP,MAP);p.y=clamp(p.y+(mag>0?p.moveY/mag:0)*speed*dt,-MAP,MAP);
- if(Math.hypot(p.x-storm.x,p.y-storm.y)>storm.r){p.hp-=dt*9;if(p.hp<=0){p.alive=false;p.respawnAt=elapsed+5;}}
- for(let i=coins.length-1;i>=0;i--){let c=coins[i];if(Math.hypot(c.x-p.x,c.y-p.y)<p.size+12){p.gold+=c.value;p.size=Math.min(44,p.size+.07);coins.splice(i,1);}}
+function spawnBoss(){const pos=spawnPos(),hp=1500+island*550;boss={id:'boss',name:['Coconut King','Coral Tyrant','Ancient Guardian','Ember Titan','Storm King','Crystal Warden','Moon Specter','Sunken Emperor','Phantom Lord','Tide Monarch'][island],...pos,hp,maxhp:hp,alive:true,angle:0,attackAnim:0,attackAnimLen:.4,attackSide:1,swordSide:1,size:3,skin:'gold',pet:'none',cd:1};emit('boss_spawn',{name:boss.name})}
+function chooseEvent(){const ids=['gold','rain','wind','truce'];event={id:ids[Math.floor(rand(0,ids.length))],until:elapsed+22};emit('event',{id:event.id})}
+function update(dt){elapsed+=dt;const duration=ISLANDS[island][1];if(elapsed>=duration){startRound();return}
+ if(!event&&elapsed>65&&Math.floor(elapsed)%85===0&&Math.random()<dt)chooseEvent();if(event&&elapsed>event.until)event=null;
+ if(!boss&&island>=4&&round%2===0&&elapsed>52)spawnBoss();
+ if(event?.id!=='truce')storm.r=Math.max(68,1850-1750*Math.pow(elapsed/duration,1.35));storm.phase=elapsed<18?'prepare':'advance';storm.seconds=Math.round(duration-elapsed);
+ const fighters=all();for(const p of fighters){if(!p.alive){if(elapsed>=p.respawn){const fresh=fighter(p.id,p.name,p.bot);Object.assign(p,fresh,{skin:p.skin,pet:p.pet})}continue}
+ p.cd=Math.max(0,p.cd-dt);p.attackAnim=Math.max(0,p.attackAnim-dt);p.dashTimer=Math.max(0,p.dashTimer-dt);p.blueBlade=Math.max(0,p.blueBlade-dt);p.hurtTimer=Math.max(0,p.hurtTimer-dt);
+ if(p.bot){let t=null,best=Infinity;for(const q of fighters){if(q===p||!q.alive)continue;let d=(q.x-p.x)**2+(q.y-p.y)**2;if(d<best){best=d;t=q}}if(t&&best<430*430){let angle=Math.atan2(t.y-p.y,t.x-p.x);p.angle=angle;p.moveX=Math.cos(angle);p.moveY=Math.sin(angle);if(best<95*95&&p.cd<=0)hit(p,Math.random()<.22)}else{p.aiClock-=dt;if(p.aiClock<=0){p.aiClock=rand(1,4);p.aiAngle=rand(-3.14,3.14)}p.angle=p.aiAngle;p.moveX=Math.cos(p.angle)*.65;p.moveY=Math.sin(p.angle)*.65}}
+ const speed=(p.dashTimer>0?700:(event?.id==='wind'?250:210))*(p.bot?.87:1);let len=Math.hypot(p.moveX,p.moveY);if(len>.01){p.vx=p.moveX/Math.max(len,1)*speed;p.vy=p.moveY/Math.max(len,1)*speed;p.x=clamp(p.x+p.vx*dt,-MAP+20,MAP-20);p.y=clamp(p.y+p.vy*dt,-MAP+20,MAP-20)}else p.vx=p.vy=0;
+ if(Math.hypot(p.x-storm.x,p.y-storm.y)>storm.r)hurt(p,dt*14,null);
+ for(let i=coins.length-1;i>=0;i--){let c=coins[i];if(Math.hypot(c.x-p.x,c.y-p.y)<32*p.size){p.loot+=c.value*(event?.id==='gold'?2:1);p.size=Math.min(2.5,p.size+.0018);coins.splice(i,1)}}
+ for(let i=chests.length-1;i>=0;i--){const c=chests[i];if(Math.hypot(c.x-p.x,c.y-p.y)<34){chests.splice(i,1);p.loot+=75;for(let k=0;k<7;k++)spawnCoin(c.x+rand(-40,40),c.y+rand(-40,40),10)}}
  }
- if(coins.length<200)for(let i=0;i<70;i++)coins.push({id:crypto.randomUUID(),x:rand(-MAP,MAP),y:rand(-MAP,MAP),value:Math.floor(rand(1,6))});
- if(elapsed>240)reset();
+ if(coins.length<320)for(let i=0;i<45;i++)spawnCoin(rand(-MAP+40,MAP-40),rand(-MAP+40,MAP-40),Math.floor(rand(1,7)));
+ if(event?.id==='rain'&&Math.random()<dt*8)for(let i=0;i<6;i++)spawnCoin(rand(-MAP,MAP),rand(-MAP,MAP),12);
+ if(boss?.alive){boss.cd=Math.max(0,boss.cd-dt);boss.attackAnim=Math.max(0,boss.attackAnim-dt);let nearest=null,dist=1e9;for(let p of fighters){if(!p.alive)continue;const d=Math.hypot(p.x-boss.x,p.y-boss.y);if(d<dist){dist=d;nearest=p}}if(nearest){const a=Math.atan2(nearest.y-boss.y,nearest.x-boss.x);boss.angle=a;boss.x=clamp(boss.x+Math.cos(a)*dt*(78+island*6),-MAP,MAP);boss.y=clamp(boss.y+Math.sin(a)*dt*(78+island*6),-MAP,MAP);if(dist<120&&boss.cd<=0){boss.cd=1.1;boss.attackAnim=.4;hurt(nearest,20+island*3,null)}}}
 }
-fill();makeCoins();
-wss.on('connection',(ws)=>{if(humans.size>=MAX){ws.close(1013,'Match full');return;}let id=crypto.randomUUID(),p=fighter(id,'Pirate_'+id.slice(0,4));humans.set(id,p);fill();ws.send(JSON.stringify({type:'welcome',id,round}));
- ws.on('message',raw=>{if(raw.length>2048)return;let m;try{m=JSON.parse(raw)}catch{return};if(!m||typeof m!=='object')return;
- if(m.type==='join'){let requested=String(m.name||p.name).replace(/[^\w -]/g,'').trim().slice(0,16)||p.name;if(requested.toLowerCase()==='britbox'){if(!verifyOwner(m.ownerSecret)){ws.send(JSON.stringify({type:'name_rejected',reason:'BRITBOX is reserved. Set BRITBOX_OWNER_SECRET in Render and enter the owner secret to use this name.'}));requested='Pirate_'+id.slice(0,4);}else requested=OWNER_NAME;}p.name=requested;p.skin=String(m.skin||'classic').slice(0,24);p.pet=String(m.pet||'none').slice(0,24);}
- if(m.type==='input'){let x=Number(m.x)||0,y=Number(m.y)||0,mag=Math.hypot(x,y);p.moveX=mag>1?x/mag:x;p.moveY=mag>1?y/mag:y;if(mag>.05)p.angle=Math.atan2(y,x);if(m.attack===true&&p.attack<=0)attack(p,false);if(m.charge===true&&!p.charging){p.charging=true;p.chargeStart=Date.now();}if(m.charge===false&&p.charging){let charged=Date.now()-p.chargeStart>=300;p.charging=false;attack(p,charged);}}
- });ws.on('close',()=>{humans.delete(id);fill()});ws.on('error',()=>{});
-});
-setInterval(()=>{let now=Date.now(),dt=Math.min(.1,(now-worldTime)/1000);worldTime=now;update(dt);broadcast({type:'state',round,elapsed:Math.round(elapsed),storm,humans:humans.size,bots:bots.length,players:[...humans.values(),...bots].map(p=>({id:p.id,name:p.name,bot:p.bot,x:Math.round(p.x),y:Math.round(p.y),angle:p.angle,hp:Math.round(p.hp),size:p.size,alive:p.alive,kills:p.kills,gold:p.gold,skin:p.skin,pet:p.pet,attack:p.attack,dash:p.dash})),coins});},TICK);
-server.listen(process.env.PORT||3000,'0.0.0.0',()=>console.log('Island Clash multiplayer listening on '+(process.env.PORT||3000)));
+const publicPlayer=p=>({id:p.id,name:p.name,bot:p.bot,x:Math.round(p.x),y:Math.round(p.y),vx:p.vx,vy:p.vy,angle:p.angle,hp:Math.round(p.hp),maxhp:p.maxhp,size:p.size,loot:p.loot,kills:p.kills,alive:p.alive,attackAnim:p.attackAnim,attackAnimLen:p.attackAnimLen,attackSide:p.attackSide,swordSide:p.swordSide,dashTimer:p.dashTimer,blueBlade:p.blueBlade,hurtTimer:p.hurtTimer,skin:p.skin,pet:p.pet});
+function snapshot(){return{type:'state',round,island,elapsed,storm,event:event?{id:event.id,time:event.until-elapsed}:null,players:all().map(publicPlayer),coins,chests,boss:boss?.alive?publicPlayer(boss):null,humans:humans.size,bots:bots.size}}
+function reply(ws,obj){if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(obj))}
+function message(ws,raw){if(raw.length>4096)return;let m;try{m=JSON.parse(raw)}catch{return}if(!m||typeof m!=='object')return;
+ if(m.type==='signup'){const name=safeName(m.name),password=String(m.password||'');if(!name||password.length<8||password.length>128)return reply(ws,{type:'error',message:'Use a 3–16 character name and a passcode of at least 8 characters.'});const key=name.toLowerCase();if(accounts[key])return reply(ws,{type:'error',message:'That name is already registered.'});const owner=key==='britbox';if(owner&&(!process.env.OWNER_SETUP_SECRET||String(m.ownerSecret||'')!==process.env.OWNER_SETUP_SECRET))return reply(ws,{type:'error',message:'BRITBOX is reserved. Enter the owner setup secret from Render.'});const salt=crypto.randomBytes(16).toString('hex');accounts[key]={name:owner?'BRITBOX':name,salt,hash:hashPassword(password,salt),owner,created:Date.now()};saveAccounts();return login(ws,accounts[key])}
+ if(m.type==='login'){const name=safeName(m.name),account=accounts[name?.toLowerCase()];const pwd=String(m.password||'');if(!account||!equalHex(hashPassword(pwd,account.salt),account.hash))return reply(ws,{type:'error',message:'Incorrect name or passcode.'});return login(ws,account)}
+ if(m.type==='input'){if(!ws.account||!ws.player)return;const p=ws.player;let x=clamp(Number(m.x)||0,-1,1),y=clamp(Number(m.y)||0,-1,1);p.moveX=x;p.moveY=y;if(x*x+y*y>.01)p.angle=Math.atan2(y,x);if(m.charge===true&&!p.charging){p.charging=true;p.chargeAt=Date.now()}if(m.charge===false&&p.charging){const charged=Date.now()-p.chargeAt>=300;p.charging=false;hit(p,charged)}return}
+ if(m.type==='admin'){if(!ws.account?.owner)return reply(ws,{type:'error',message:'Owner access required.'});switch(m.action){case 'boss':spawnBoss();break;case 'gold':if(ws.player)ws.player.loot+=1000;break;case 'island':island=clamp(Math.floor(Number(m.value)||0),0,9);startRound();break;case 'event':if(['gold','rain','wind','truce'].includes(m.value))event={id:m.value,until:elapsed+25};break;default:return}return reply(ws,{type:'notice',message:'Owner command applied.'})}
+}
+function login(ws,account){if(ws.player){humans.delete(ws.player.id);ws.player=null}for(const c of wss.clients){if(c!==ws&&c.account?.name.toLowerCase()===account.name.toLowerCase()){reply(c,{type:'error',message:'Account signed in on another device.'});c.close(4001,'Signed in elsewhere')}}const p=fighter(id(),account.name,false);humans.set(p.id,p);ws.account=account;ws.player=p;refill();reply(ws,{type:'authenticated',id:p.id,name:account.name,owner:account.owner});}
+wss.on('connection',ws=>{if(humans.size>=MAX){ws.close(1013,'Match full');return}ws.account=null;ws.player=null;ws.on('message',raw=>message(ws,raw));ws.on('close',()=>{if(ws.player)humans.delete(ws.player.id);refill()});ws.on('error',()=>{});reply(ws,{type:'hello',message:'Log in or sign up to enter the arena.'})});
+refill();setupLoot();setInterval(()=>update(STEP),50);setInterval(()=>{const msg=JSON.stringify(snapshot());for(const ws of wss.clients)if(ws.player&&ws.readyState===WebSocket.OPEN)ws.send(msg)},100);app.get('/health',(req,res)=>res.json({online:true,players:humans.size,bots:bots.size,round}));server.listen(process.env.PORT||3000,'0.0.0.0',()=>console.log('Island Clash v30 online on '+(process.env.PORT||3000)));
